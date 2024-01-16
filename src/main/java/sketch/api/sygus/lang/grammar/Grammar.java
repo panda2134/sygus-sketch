@@ -9,7 +9,7 @@ import java.util.List;
 public class Grammar extends SygusNode {
     private List<Production> rules;
 
-    public void accept(SygusNodeVisitor visitor) { visitor.visitGrammar(this); }
+    public Object accept(SygusNodeVisitor visitor) { return visitor.visitGrammar(this); }
 
     public Grammar(List<Production> rules) {
         this.rules = rules;

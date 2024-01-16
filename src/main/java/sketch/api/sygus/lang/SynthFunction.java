@@ -23,7 +23,7 @@ public class SynthFunction extends SygusNode {
         this.grammar = grammar;
     }
 
-    public void accept(SygusNodeVisitor visitor) { visitor.visitSynthFunction(this); }
+    public Object accept(SygusNodeVisitor visitor) { return visitor.visitSynthFunction(this); }
 
     public String getFunctionID() { return functionID; }
     public List<Variable> getArgs() { return args; }

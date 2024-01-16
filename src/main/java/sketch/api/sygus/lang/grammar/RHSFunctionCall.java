@@ -22,7 +22,7 @@ public class RHSFunctionCall extends RHSTerm {
         this.args = new ArrayList<>(args);
     }
 
-    public void accept(SygusNodeVisitor visitor) { visitor.visitRHSFunctionCall(this); }
+    public Object accept(SygusNodeVisitor visitor) { return visitor.visitRHSFunctionCall(this); }
 
     public String getFunctionID() { return functionID; }
     public List<RHSTerm> getArgs() { return args; }

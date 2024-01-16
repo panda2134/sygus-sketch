@@ -18,7 +18,7 @@ public class Variable extends Expression {
         this.id = String.valueOf(id);
     }
 
-    public void accept(SygusNodeVisitor visitor) { visitor.visitVariable(this); }
+    public Object accept(SygusNodeVisitor visitor) { return visitor.visitVariable(this); }
 
     public String getID() { return id; }
     public String getType() { return type; }

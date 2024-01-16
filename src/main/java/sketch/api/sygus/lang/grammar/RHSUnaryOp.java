@@ -1,4 +1,4 @@
-package sketch.api.sygus.lang.expr;
+package sketch.api.sygus.lang.grammar;
 
 import sketch.api.sygus.lang.SygusNodeVisitor;
 
@@ -7,7 +7,7 @@ import sketch.api.sygus.lang.SygusNodeVisitor;
  *
  * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
  */
-public class ExprUnary extends Expression {
+public class RHSUnaryOp extends RHSTerm {
 
     public enum UnaryOp {
         UNOP_NOT, UNOP_BNOT, UNOP_NEG,
@@ -16,18 +16,18 @@ public class ExprUnary extends Expression {
     }
 
     private UnaryOp op;
-    private Expression expr;
+    private RHSTerm expr;
 
-    public ExprUnary(UnaryOp op, Expression expr) {
+    public RHSUnaryOp(UnaryOp op, RHSTerm expr) {
         super();
         this.op = op;
         this.expr = expr;
     }
 
-    public void accept(SygusNodeVisitor visitor) { visitor.visitExprUnary(this); }
+    public Object accept(SygusNodeVisitor visitor) { return visitor.visitRHSUnaryOp(this); }
 
     public UnaryOp getOp() { return op; }
-    public Expression getExpr() { return expr; }
+    public RHSTerm getExpr() { return expr; }
 
     public String unaryOpToString(UnaryOp op) {
         switch(op) {

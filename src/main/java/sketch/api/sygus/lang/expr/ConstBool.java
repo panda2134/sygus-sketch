@@ -16,7 +16,7 @@ public class ConstBool extends Constant {
         this.value = value;
     }
 
-    public void accept(SygusNodeVisitor visitor) { visitor.visitConstBool(this); }
+    public Object accept(SygusNodeVisitor visitor) { return visitor.visitConstBool(this); }
 
     public boolean getValue() { return value; }
 

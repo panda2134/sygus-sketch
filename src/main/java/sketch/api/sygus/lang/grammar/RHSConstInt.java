@@ -16,7 +16,7 @@ public class RHSConstInt extends RHSConstant {
         this.value = value;
     }
 
-    public void accept(SygusNodeVisitor visitor) { visitor.visitRHSConstInt(this); }
+    public Object accept(SygusNodeVisitor visitor) { return visitor.visitRHSConstInt(this); }
 
     public int getValue() { return this.value; }
 

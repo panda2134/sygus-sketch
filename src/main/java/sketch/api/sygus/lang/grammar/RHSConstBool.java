@@ -16,7 +16,7 @@ public class RHSConstBool extends RHSConstant {
         this.value = value;
     }
 
-    public void accept(SygusNodeVisitor visitor) { visitor.visitRHSConstBool(this); }
+    public Object accept(SygusNodeVisitor visitor) { return visitor.visitRHSConstBool(this); }
 
     public boolean getValue() { return value; }
 

@@ -16,7 +16,7 @@ public class Nonterminal extends RHSTerm {
         this.type = type;
     }
 
-    public void accept(SygusNodeVisitor visitor) { visitor.visitNonterminal(this); }
+    public Object accept(SygusNodeVisitor visitor) { return visitor.visitNonterminal(this); }
 
     public String getName() { return name; }
     public String getType() { return type; }

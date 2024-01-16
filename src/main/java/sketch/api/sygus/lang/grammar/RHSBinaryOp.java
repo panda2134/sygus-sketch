@@ -1,4 +1,4 @@
-package sketch.api.sygus.lang.expr;
+package sketch.api.sygus.lang.grammar;
 
 import sketch.api.sygus.lang.SygusNodeVisitor;
 
@@ -7,7 +7,7 @@ import sketch.api.sygus.lang.SygusNodeVisitor;
  *
  * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
  */
-public class ExprBinary extends Expression {
+public class RHSBinaryOp extends RHSTerm {
 
     public enum BinaryOp {
         BINOP_ADD, BINOP_SUB, BINOP_MUL, BINOP_DIV, BINOP_MOD,
@@ -19,20 +19,20 @@ public class ExprBinary extends Expression {
     }
 
     private BinaryOp op;
-    private Expression left, right;
+    private RHSTerm left, right;
 
-    public ExprBinary(BinaryOp op, Expression left, Expression right) {
+    public RHSBinaryOp(BinaryOp op, RHSTerm left, RHSTerm right) {
         super();
         this.op = op;
         this.left = left;
         this.right = right;
     }
 
-    public void accept(SygusNodeVisitor visitor) { visitor.visitExprBinary(this); }
+    public Object accept(SygusNodeVisitor visitor) { return visitor.visitRHSBinaryOp(this); }
 
     public BinaryOp getOp() { return op; }
-    public Expression getLeft() { return left; }
-    public Expression getRight() { return right; }
+    public RHSTerm getLeft() { return left; }
+    public RHSTerm getRight() { return right; }
 
     public String binaryOpToString(BinaryOp op) {
         switch(op) {

@@ -14,9 +14,9 @@ public class ProblemSolver extends SequentialSketchMain {
     }
 
     private Program buildSketchProgram() {
-        Program prog = Program.emptyProgram();
-
-        return prog;
+        SketchBuilder builder = new SketchBuilder();
+        sygusProblem.accept(builder);
+        return builder.program();
     }
 
     public Output solve() {

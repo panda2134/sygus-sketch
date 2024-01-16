@@ -9,8 +9,8 @@ public interface SygusNodeVisitor {
 
     public Object visitConstBool(ConstBool b);
     public Object visitConstInt(ConstInt n);
-    public Object visitExprUnary(ExprUnary e);
-    public Object visitExprBinary(ExprBinary e);
+    public Object visitExprUnaryOp(ExprUnaryOp e);
+    public Object visitExprBinaryOp(ExprBinaryOp e);
     public Object visitFunctionCall(ExprFunctionCall f);
     public Object visitVariable(Variable v);
 
@@ -20,6 +20,6 @@ public interface SygusNodeVisitor {
     public Object visitRHSConstBool(RHSConstBool b);
     public Object visitRHSConstInt(RHSConstInt n);
     public Object visitRHSFunctionCall(RHSFunctionCall f);
-    public Object visitRHSUnary(RHSUnary e);
-    public Object visitRHSBinary(RHSBinary e);
+    public Object visitRHSUnaryOp(RHSUnaryOp e);
+    public Object visitRHSBinaryOp(RHSBinaryOp e);
 }

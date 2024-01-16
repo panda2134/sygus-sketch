@@ -22,7 +22,7 @@ public class ExprFunctionCall extends Expression {
         this.args = new ArrayList<>(args);
     }
 
-    public void accept(SygusNodeVisitor visitor) { visitor.visitFunctionCall(this); }
+    public Object accept(SygusNodeVisitor visitor) { return visitor.visitFunctionCall(this); }
 
     public String getFunctionID() { return functionID; }
     public List<Expression> getArgs() { return args; }

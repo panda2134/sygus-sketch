@@ -26,7 +26,7 @@ public class SygusProblem extends SygusNode {
         return new SygusProblem(new ArrayList<Variable>(), new ArrayList<SynthFunction>(), new ArrayList<Expression>());
     }
 
-    public void accept(SygusNodeVisitor visitor) { visitor.visitSygusProblem(this); }
+    public Object accept(SygusNodeVisitor visitor) { return visitor.visitSygusProblem(this); }
 
     public List<Variable> getVariables() { return variables; }
     public List<SynthFunction> getTargetFunctions() { return targetFunctions; }
