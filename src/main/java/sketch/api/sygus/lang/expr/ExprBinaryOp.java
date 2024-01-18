@@ -7,7 +7,7 @@ import sketch.api.sygus.lang.SygusNodeVisitor;
  *
  * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
  */
-public class ExprBinaryOp extends Expression {
+public class ExprBinaryOp extends SygusExpression {
 
     public enum BinaryOp {
         BINOP_ADD, BINOP_SUB, BINOP_MUL, BINOP_DIV, BINOP_MOD,
@@ -19,9 +19,9 @@ public class ExprBinaryOp extends Expression {
     }
 
     private BinaryOp op;
-    private Expression left, right;
+    private SygusExpression left, right;
 
-    public ExprBinaryOp(BinaryOp op, Expression left, Expression right) {
+    public ExprBinaryOp(BinaryOp op, SygusExpression left, SygusExpression right) {
         super();
         this.op = op;
         this.left = left;
@@ -31,8 +31,8 @@ public class ExprBinaryOp extends Expression {
     public Object accept(SygusNodeVisitor visitor) { return visitor.visitExprBinaryOp(this); }
 
     public BinaryOp getOp() { return op; }
-    public Expression getLeft() { return left; }
-    public Expression getRight() { return right; }
+    public SygusExpression getLeft() { return left; }
+    public SygusExpression getRight() { return right; }
 
     public String binaryOpToString(BinaryOp op) {
         switch(op) {

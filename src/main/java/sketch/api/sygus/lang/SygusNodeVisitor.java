@@ -17,6 +17,7 @@ public interface SygusNodeVisitor {
     public Object visitGrammar(Grammar g);
     public Object visitNonterminal(Nonterminal n);
     public Object visitProduction(Production prod);
+    public Object visitRHSNonterminal(RHSNonterminal non);
     public Object visitRHSConstBool(RHSConstBool b);
     public Object visitRHSConstInt(RHSConstInt n);
     public Object visitRHSFunctionCall(RHSFunctionCall f);

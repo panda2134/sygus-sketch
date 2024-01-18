@@ -7,7 +7,7 @@ import sketch.api.sygus.lang.SygusNodeVisitor;
  *
  * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
  */
-public class Variable extends Expression {
+public class Variable extends SygusExpression {
 
     private String id;
     private String type;

@@ -1,5 +1,6 @@
 package sketch.api.sygus.lang.grammar;
 
+import sketch.api.sygus.lang.SygusNode;
 import sketch.api.sygus.lang.SygusNodeVisitor;
 
 /**
@@ -7,7 +8,7 @@ import sketch.api.sygus.lang.SygusNodeVisitor;
  *
  * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
  */
-public class Nonterminal extends RHSTerm {
+public class Nonterminal extends SygusNode {
     private String name;
     private String type;
 

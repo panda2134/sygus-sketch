@@ -7,7 +7,7 @@ import sketch.api.sygus.lang.SygusNodeVisitor;
  *
  * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
  */
-public class ExprUnaryOp extends Expression {
+public class ExprUnaryOp extends SygusExpression {
 
     public enum UnaryOp {
         UNOP_NOT, UNOP_BNOT, UNOP_NEG,
@@ -16,9 +16,9 @@ public class ExprUnaryOp extends Expression {
     }
 
     private UnaryOp op;
-    private Expression expr;
+    private SygusExpression expr;
 
-    public ExprUnaryOp(UnaryOp op, Expression expr) {
+    public ExprUnaryOp(UnaryOp op, SygusExpression expr) {
         super();
         this.op = op;
         this.expr = expr;
@@ -27,7 +27,7 @@ public class ExprUnaryOp extends Expression {
     public Object accept(SygusNodeVisitor visitor) { return visitor.visitExprUnaryOp(this); }
 
     public UnaryOp getOp() { return op; }
-    public Expression getExpr() { return expr; }
+    public SygusExpression getExpr() { return expr; }
 
     public String unaryOpToString(UnaryOp op) {
         switch(op) {

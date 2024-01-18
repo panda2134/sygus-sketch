@@ -7,7 +7,7 @@ import sketch.api.sygus.lang.SygusNode;
  *
  * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
  */
-public abstract class Expression extends SygusNode {
+public abstract class SygusExpression extends SygusNode {
     public abstract String toString();
     public boolean isConstant() { return false; }
 }

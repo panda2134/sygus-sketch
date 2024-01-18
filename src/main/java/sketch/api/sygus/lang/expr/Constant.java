@@ -5,7 +5,7 @@ package sketch.api.sygus.lang.expr;
  *
  * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
  */
-public abstract class Constant extends Expression {
+public abstract class Constant extends SygusExpression {
     @Override
     public boolean isConstant() { return true; }
 }
