@@ -2,10 +2,13 @@ package sketch.api.sygus.lang;
 
 import sketch.api.sygus.lang.expr.*;
 import sketch.api.sygus.lang.grammar.*;
+import sketch.api.sygus.lang.type.*;
 
 public interface SygusNodeVisitor {
     public Object visitSygusProblem(SygusProblem problem);
     public Object visitSynthFunction(SynthFunction func);
+
+    public Object visitTypePrimitive(TypePrimitive ty);
 
     public Object visitConstBool(ConstBool b);
     public Object visitConstInt(ConstInt n);

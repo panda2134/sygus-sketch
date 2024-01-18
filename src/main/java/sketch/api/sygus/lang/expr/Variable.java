@@ -1,6 +1,7 @@
 package sketch.api.sygus.lang.expr;
 
 import sketch.api.sygus.lang.SygusNodeVisitor;
+import sketch.api.sygus.lang.type.SygusType;
 
 /**
  * A SyGuS variable.
@@ -10,9 +11,9 @@ import sketch.api.sygus.lang.SygusNodeVisitor;
 public class Variable extends SygusExpression {
 
     private String id;
-    private String type;
+    private SygusType type;
 
-    public Variable(String id, String type) {
+    public Variable(String id, SygusType type) {
         super();
         this.type = type;
         this.id = String.valueOf(id);
@@ -21,10 +22,10 @@ public class Variable extends SygusExpression {
     public Object accept(SygusNodeVisitor visitor) { return visitor.visitVariable(this); }
 
     public String getID() { return id; }
-    public String getType() { return type; }
+    public SygusType getType() { return type; }
 
     public String toString() { return id; }
     public String toFullString() {
-        return String.format("(%s %s)", id, type);
+        return String.format("(%s %s)", id, type.toString());
     }
 }

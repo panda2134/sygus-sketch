@@ -3,8 +3,10 @@ package sketch.api.sygus.solvers;
 import sketch.api.sygus.lang.SygusNodeVisitor;
 import sketch.api.sygus.lang.SygusProblem;
 import sketch.api.sygus.lang.SynthFunction;
+import sketch.api.sygus.lang.type.TypePrimitive;
 import sketch.api.sygus.lang.expr.*;
 import sketch.api.sygus.lang.grammar.*;
+import sketch.api.sygus.util.exception.SketchConversionException;
 import sketch.compiler.ast.core.*;
 import sketch.compiler.ast.core.Package;
 import sketch.compiler.ast.core.exprs.*;
@@ -48,8 +50,26 @@ public class SketchBuilder implements SygusNodeVisitor {
     }
 
     @Override
-    public Object visitSynthFunction(SynthFunction func) {
-        return null;
+    public Function visitSynthFunction(SynthFunction func) {
+        Function.FunctionCreator fc = Function.creator(prog, func.getFunctionID(), Function.FcnType.Static);
+
+        // TODO Fill implementation
+        Type returnType = (Type) func.getReturnType().accept(this);
+        fc.returnType(returnType);
+
+        return fc.create();
+    }
+
+    @Override
+    public sketch.compiler.ast.core.typs.TypePrimitive visitTypePrimitive(TypePrimitive ty) {
+        switch(ty.getPredefinedType()) {
+            case TYPE_INT:
+                return sketch.compiler.ast.core.typs.TypePrimitive.inttype;
+            case TYPE_BOOLEAN:
+                return sketch.compiler.ast.core.typs.TypePrimitive.bittype;
+            default:
+                throw new SketchConversionException("Unknown predefined type");
+        }
     }
 
     @Override
@@ -74,7 +94,7 @@ public class SketchBuilder implements SygusNodeVisitor {
             case UNOP_NEG:
                 return new ExprUnary(prog, ExprUnary.UNOP_NEG, subExpr);
             default:
-                return null;
+                throw new SketchConversionException("Unknown unary operator");
         }
     }
 
@@ -114,7 +134,7 @@ public class SketchBuilder implements SygusNodeVisitor {
             case BINOP_GE:
                 return new ExprBinary(prog, ExprBinary.BINOP_GE, left, right);
             default:
-                return null;
+                throw new SketchConversionException("Unknown binary operator");
         }
     }
 
@@ -152,6 +172,11 @@ public class SketchBuilder implements SygusNodeVisitor {
     }
 
     @Override
+    public Object visitRHSNonterminal(RHSNonterminal n) {
+        return null;
+    }
+
+    @Override
     public Object visitRHSConstBool(RHSConstBool b) {
         return b.getValue() ? ExprConstInt.one : ExprConstInt.zero;
     }
@@ -180,7 +205,7 @@ public class SketchBuilder implements SygusNodeVisitor {
             case UNOP_NEG:
                 return new ExprUnary(prog, ExprUnary.UNOP_NEG, subExpr);
             default:
-                return null;
+                throw new SketchConversionException("Unknown unary operator");
         }
     }
 
@@ -220,7 +245,7 @@ public class SketchBuilder implements SygusNodeVisitor {
                 case BINOP_GE:
                     return new ExprBinary(prog, ExprBinary.BINOP_GE, left, right);
                 default:
-                    return null;
+                    throw new SketchConversionException("Unknown binary operator");
             }
     }
 }

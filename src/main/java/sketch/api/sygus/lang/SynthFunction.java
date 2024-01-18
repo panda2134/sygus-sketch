@@ -2,6 +2,7 @@ package sketch.api.sygus.lang;
 
 import sketch.api.sygus.lang.expr.Variable;
 import sketch.api.sygus.lang.grammar.Grammar;
+import sketch.api.sygus.lang.type.SygusType;
 
 import java.util.List;
 
@@ -13,10 +14,10 @@ import java.util.List;
 public class SynthFunction extends SygusNode {
     private String functionID;
     private List<Variable> args;
-    private String returnType;
+    private SygusType returnType;
     private Grammar grammar;
 
-    public SynthFunction(String functionID, List<Variable> args, String returnType, Grammar grammar) {
+    public SynthFunction(String functionID, List<Variable> args, SygusType returnType, Grammar grammar) {
         this.functionID = functionID;
         this.args = args;
         this.returnType = returnType;
@@ -27,6 +28,6 @@ public class SynthFunction extends SygusNode {
 
     public String getFunctionID() { return functionID; }
     public List<Variable> getArgs() { return args; }
-    public String getReturnType() { return returnType; }
+    public SygusType getReturnType() { return returnType; }
     public Grammar getGrammar() { return grammar; }
 }
