@@ -22,7 +22,7 @@ public class SygusProblem extends SygusNode {
         this.constraints = constraints;
     }
 
-    public SygusProblem emptyProblem() {
+    public static SygusProblem emptyProblem() {
         return new SygusProblem(new ArrayList<Variable>(), new ArrayList<SynthFunction>(), new ArrayList<SygusExpression>());
     }
 
@@ -34,7 +34,8 @@ public class SygusProblem extends SygusNode {
 
     public void addVariable(Variable v) { variables.add(v); }
     public void addTargetFunction(SynthFunction f) { targetFunctions.add(f); }
-    public void addConstraints(SygusExpression e) { constraints.add(e); }
+    public void addConstraint(SygusExpression e) { constraints.add(e); }
+    public void addConstraints(List<SygusExpression> exprs) { constraints.addAll(exprs); }
 
     public boolean removeVariable(Variable v) { return variables.remove(v); }
     public boolean removeTargetFunction(SynthFunction f) { return targetFunctions.remove(f); }

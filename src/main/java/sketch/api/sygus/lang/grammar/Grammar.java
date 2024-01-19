@@ -19,5 +19,7 @@ public class Grammar extends SygusNode {
         return new Grammar(new ArrayList<Production>());
     }
 
+    public void addRule(Production rule) { rules.add(rule); }
+
     public List<Production> getRules() { return rules; }
 }

@@ -16,7 +16,7 @@ public class Variable extends SygusExpression {
     public Variable(String id, SygusType type) {
         super();
         this.type = type;
-        this.id = String.valueOf(id);
+        this.id = id;
     }
 
     public Object accept(SygusNodeVisitor visitor) { return visitor.visitVariable(this); }

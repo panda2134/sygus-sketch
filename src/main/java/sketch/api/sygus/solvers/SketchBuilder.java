@@ -20,12 +20,8 @@ import java.util.stream.Collectors;
 public class SketchBuilder implements SygusNodeVisitor {
 
     private Program prog;
-    private List<Variable> sygusVars;
     private List<Parameter> generatorParams;
-    private List<Function> generatorFunctions;
     private SynthFunction currSynthFunction;
-
-    private int constraintCounter;
 
     public SketchBuilder() { }
 
@@ -43,9 +39,6 @@ public class SketchBuilder implements SygusNodeVisitor {
         List<Package> namespaces = new ArrayList<Package>();
 
         prog = Program.emptyProgram();
-        sygusVars = problem.getVariables();
-        generatorFunctions = new ArrayList<Function>();
-        constraintCounter = 0;
 
         // Add functions from SynthFunctions
         problem.getTargetFunctions().stream()
@@ -67,7 +60,7 @@ public class SketchBuilder implements SygusNodeVisitor {
         String functionName = "constraints";
         Function.FunctionCreator fc = Function.creator(prog, functionName, Function.FcnType.Harness);
 
-        List<Statement> varDecls = sygusVars.stream()
+        List<Statement> varDecls = problem.getVariables().stream()
                 .map(this::variableDeclWithHole)
                 .collect(Collectors.toList());
 
@@ -136,6 +129,7 @@ public class SketchBuilder implements SygusNodeVisitor {
         this.currSynthFunction = null;
 
         sketchFuncs.add(fc.create());
+        sketchFuncs.addAll(generatorFuncs);
 
         return sketchFuncs;
     }
@@ -225,6 +219,15 @@ public class SketchBuilder implements SygusNodeVisitor {
     }
 
     @Override
+    public ExprTernary visitExprIfThenElse(ExprIfThenElse e) {
+        Expression condExpr = (Expression) e.getCond().accept(this);
+        Expression consExpr = (Expression) e.getCons().accept(this);
+        Expression altExpr = (Expression) e.getAlt().accept(this);
+
+        return new ExprTernary(prog, ExprTernary.TEROP_COND, condExpr, consExpr, altExpr);
+    }
+
+    @Override
     public ExprFunCall visitFunctionCall(ExprFunctionCall f) {
         List<Expression> params = f.getArgs().stream()
                 .map(e -> (Expression) e.accept(this))
@@ -281,6 +284,9 @@ public class SketchBuilder implements SygusNodeVisitor {
     }
 
     @Override
+    public ExprVar visitRHSVariable(RHSVariable v) { return new ExprVar(prog, v.getID()); }
+
+    @Override
     public ExprFunCall visitRHSNonterminal(RHSNonterminal n) {
         String generatorID = String.format(
                 "%s_%s_gen",
@@ -296,15 +302,15 @@ public class SketchBuilder implements SygusNodeVisitor {
     }
 
     @Override
-    public Object visitRHSConstBool(RHSConstBool b) {
+    public ExprConstInt visitRHSConstBool(RHSConstBool b) {
         return b.getValue() ? ExprConstInt.one : ExprConstInt.zero;
     }
 
     @Override
-    public Object visitRHSConstInt(RHSConstInt n) { return ExprConstInt.createConstant(n.getValue()); }
+    public ExprConstInt visitRHSConstInt(RHSConstInt n) { return ExprConstInt.createConstant(n.getValue()); }
 
     @Override
-    public Object visitRHSFunctionCall(RHSFunctionCall f) {
+    public ExprFunCall visitRHSFunctionCall(RHSFunctionCall f) {
         List<Expression> params = f.getArgs().stream()
                 .map(e -> (Expression) e.accept(this))
                 .collect(Collectors.toList());
@@ -313,7 +319,7 @@ public class SketchBuilder implements SygusNodeVisitor {
     }
 
     @Override
-    public Object visitRHSUnaryOp(RHSUnaryOp e) {
+    public ExprUnary visitRHSUnaryOp(RHSUnaryOp e) {
         Expression subExpr = (Expression) e.getExpr().accept(this);
 
         switch(e.getOp()) {
@@ -329,7 +335,7 @@ public class SketchBuilder implements SygusNodeVisitor {
     }
 
     @Override
-    public Object visitRHSBinaryOp(RHSBinaryOp e) {
+    public ExprBinary visitRHSBinaryOp(RHSBinaryOp e) {
             Expression left = (Expression) e.getLeft().accept(this);
             Expression right = (Expression) e.getRight().accept(this);
 
@@ -366,5 +372,14 @@ public class SketchBuilder implements SygusNodeVisitor {
                 default:
                     throw new SketchConversionException("Unknown binary operator");
             }
+    }
+
+    @Override
+    public ExprTernary visitRHSIfThenElse(RHSIfThenElse e) {
+        Expression condExpr = (Expression) e.getCond().accept(this);
+        Expression consExpr = (Expression) e.getCons().accept(this);
+        Expression altExpr = (Expression) e.getAlt().accept(this);
+
+        return new ExprTernary(prog, ExprTernary.TEROP_COND, condExpr, consExpr, altExpr);
     }
 }
