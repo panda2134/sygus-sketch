@@ -21,10 +21,13 @@ public class SketchBuilder implements SygusNodeVisitor {
 
     private Program prog;
     private List<Variable> sygusVars;
+    private List<Parameter> generatorParams;
+    private List<Function> generatorFunctions;
+    private SynthFunction currSynthFunction;
 
-    public SketchBuilder() {
-        prog = Program.emptyProgram();
-    }
+    private int constraintCounter;
+
+    public SketchBuilder() { }
 
     public Program program() {
         return prog;
@@ -39,7 +42,18 @@ public class SketchBuilder implements SygusNodeVisitor {
         List<StmtSpAssert> specialAsserts = new ArrayList<StmtSpAssert>();
         List<Package> namespaces = new ArrayList<Package>();
 
+        prog = Program.emptyProgram();
         sygusVars = problem.getVariables();
+        generatorFunctions = new ArrayList<Function>();
+        constraintCounter = 0;
+
+        // Add functions from SynthFunctions
+        problem.getTargetFunctions().stream()
+                .map(synthFunction -> (List<Function>) synthFunction.accept(this))
+                .forEach(synthFunctions -> funcs.addAll(synthFunctions));
+
+        // Add constraint function
+        funcs.add(constraintFunction(problem));
 
         Package pkg = new Package(prog, pkgName, structs, vars, funcs, specialAsserts);
         namespaces.add(pkg);
@@ -49,15 +63,87 @@ public class SketchBuilder implements SygusNodeVisitor {
         return prog;
     }
 
+    private Function constraintFunction(SygusProblem problem) {
+        String functionName = "constraints";
+        Function.FunctionCreator fc = Function.creator(prog, functionName, Function.FcnType.Harness);
+
+        List<Statement> varDecls = sygusVars.stream()
+                .map(this::variableDeclWithHole)
+                .collect(Collectors.toList());
+
+        List<Statement> assertions = problem.getConstraints().stream()
+                .map(expr -> (Expression) expr.accept(this))
+                .map(expr -> new StmtAssert(prog, expr, null, 0))
+                .collect(Collectors.toList());
+
+        varDecls.addAll(assertions);
+        Statement body = new StmtBlock(varDecls);
+
+        fc.params(new ArrayList<Parameter>());
+        fc.body(body);
+
+        return fc.create();
+    }
+
+    private String generatorFunctionName(String targetFunctionName, String nonterminalName) {
+        return String.format("%s_%s_gen", targetFunctionName, nonterminalName);
+    }
+
+    private StmtVarDecl variableDeclWithHole(Variable v) {
+        Type ty = (Type) v.getType().accept(this);
+        return new StmtVarDecl(prog, ty, v.getID(), new ExprStar(prog));
+    }
+
+    /**
+     * Return a list of functions where the first one is the target function,
+     * and others are corresponding generator functions
+     *
+     * @param func A synthesis target function
+     * @return A list of functions
+     */
     @Override
-    public Function visitSynthFunction(SynthFunction func) {
+    public List<Function> visitSynthFunction(SynthFunction func) {
+        ArrayList<Function> sketchFuncs = new ArrayList<Function>();
         Function.FunctionCreator fc = Function.creator(prog, func.getFunctionID(), Function.FcnType.Static);
 
-        // TODO Fill implementation
+        // Function arguments
+        List<Parameter> params = func.getArgs().stream()
+                .map(this::variableToParam)
+                .collect(Collectors.toList());
+        fc.params(params);
+
+        // Function return type
         Type returnType = (Type) func.getReturnType().accept(this);
         fc.returnType(returnType);
 
-        return fc.create();
+        this.generatorParams = params;
+        this.currSynthFunction = func;
+
+        // Function body
+        List<Function> generatorFuncs = (List<Function>) func.getGrammar().accept(this);
+        if (generatorFuncs.size() < 1)
+            throw new SketchConversionException("Grammar must have at least one symbol");
+        Function startFunc = generatorFuncs.get(0);
+        String startFuncName = startFunc.getName();
+        List<Expression> paramVars = params.stream()
+                .map(param -> new ExprVar(prog, param.getName()))
+                .collect(Collectors.toList());
+        Statement body = new StmtExpr(new ExprFunCall(prog, startFuncName, paramVars));
+
+        fc.body(body);
+        
+        this.generatorParams = null;
+        this.currSynthFunction = null;
+
+        sketchFuncs.add(fc.create());
+
+        return sketchFuncs;
+    }
+
+    private Parameter variableToParam(Variable var) {
+        Type ty = (Type) var.getType().accept(this);
+
+        return new Parameter(prog, ty, var.getID());
     }
 
     @Override
@@ -158,22 +244,55 @@ public class SketchBuilder implements SygusNodeVisitor {
      */
     @Override
     public List<Function> visitGrammar(Grammar g) {
-        return null;
+        List<Function> generatorFuncs = g.getRules().stream()
+                .map(rule -> (Function) rule.accept(this))
+                .collect(Collectors.toList());
+
+        return generatorFuncs;
     }
 
+    /**
+     * should not be called
+     */
     @Override
     public Object visitNonterminal(Nonterminal n) {
-        return null;
+        throw new SketchConversionException("visitNonterminal should not be called");
     }
 
     @Override
-    public Object visitProduction(Production prod) {
-        return null;
+    public Function visitProduction(Production prod) {
+        String generatorID = generatorFunctionName(
+                currSynthFunction.getFunctionID(),
+                prod.getLHS().getName()
+        );
+
+        Function.FunctionCreator fc = Function.creator(prog, generatorID, Function.FcnType.Generator);
+        List<Statement> rhs = prod.getRHSList().stream()
+                .map(rhsTerm -> (Expression) rhsTerm.accept(this))
+                .map(expr -> new StmtReturn(prog, expr))
+                .map(stmt -> new StmtIfThen(prog, new ExprStar(prog), stmt, null))
+                .collect(Collectors.toList());
+        Statement body = new StmtBlock(prog, rhs);
+
+        fc.params(generatorParams);
+        fc.body(body);
+
+        return fc.create();
     }
 
     @Override
-    public Object visitRHSNonterminal(RHSNonterminal n) {
-        return null;
+    public ExprFunCall visitRHSNonterminal(RHSNonterminal n) {
+        String generatorID = String.format(
+                "%s_%s_gen",
+                currSynthFunction.getFunctionID(),
+                n.getNonterminal().getName()
+        );
+
+        List<Expression> paramVars = generatorParams.stream()
+                .map(param -> new ExprVar(prog, param.getName()))
+                .collect(Collectors.toList());
+
+        return new ExprFunCall(prog, generatorID, paramVars);
     }
 
     @Override

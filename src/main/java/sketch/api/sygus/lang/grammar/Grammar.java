@@ -18,4 +18,6 @@ public class Grammar extends SygusNode {
     public static Grammar empty() {
         return new Grammar(new ArrayList<Production>());
     }
+
+    public List<Production> getRules() { return rules; }
 }
