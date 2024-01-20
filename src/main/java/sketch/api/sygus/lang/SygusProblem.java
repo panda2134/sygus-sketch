@@ -40,8 +40,4 @@ public class SygusProblem extends SygusNode {
     public boolean removeVariable(Variable v) { return variables.remove(v); }
     public boolean removeTargetFunction(SynthFunction f) { return targetFunctions.remove(f); }
     public boolean removeConstraints(SygusExpression e) { return constraints.remove(e); }
-
-    public Output solve() {
-        return null;
-    }
 }

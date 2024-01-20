@@ -5,6 +5,7 @@ import sketch.api.sygus.lang.SynthFunction;
 import sketch.api.sygus.lang.expr.*;
 import sketch.api.sygus.lang.grammar.*;
 import sketch.api.sygus.lang.type.TypePrimitive;
+import sketch.api.sygus.solvers.ProblemSolver;
 import sketch.api.sygus.solvers.SketchBuilder;
 import sketch.compiler.ast.core.Program;
 
@@ -33,9 +34,9 @@ public class SygusSketchMain {
         rhsE.add(new RHSIfThenElse(rhsNonB, rhsNonE, rhsNonE));
 
         List<RHSTerm> rhsB = new ArrayList<RHSTerm>();
-        rhsE.add(new RHSConstBool(true));
-        rhsE.add(new RHSConstBool(false));
-        rhsE.add(new RHSBinaryOp(RHSBinaryOp.BinaryOp.BINOP_LT, rhsNonE, rhsNonE));
+        rhsB.add(new RHSConstBool(true));
+        rhsB.add(new RHSConstBool(false));
+        rhsB.add(new RHSBinaryOp(RHSBinaryOp.BinaryOp.BINOP_LT, rhsNonE, rhsNonE));
 
         Production prodE = new Production(nonE, rhsE);
         Production prodB = new Production(nonB, rhsB);
@@ -66,12 +67,7 @@ public class SygusSketchMain {
         prob.addConstraint(constraint1);
         prob.addConstraint(constraint2);
 
-        SketchBuilder builder = new SketchBuilder();
-        prob.accept(builder);
-
-        Program prog = builder.program();
-        System.out.println(prog.toString());
-
-        prog.debugDump();
+        ProblemSolver solver = new ProblemSolver(prob);
+        solver.solve();
     }
 }

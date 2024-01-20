@@ -31,6 +31,8 @@ public class SketchBuilder implements SygusNodeVisitor {
 
     @Override
     public Program visitSygusProblem(SygusProblem problem) {
+        System.out.println("Test");
+
         String pkgName = "SYGUS";
         List<ExprVar> vars = new ArrayList<ExprVar>();
         List<StructDef> structs = new ArrayList<StructDef>();
@@ -48,17 +50,22 @@ public class SketchBuilder implements SygusNodeVisitor {
         // Add constraint function
         funcs.add(constraintFunction(problem));
 
-        Package pkg = new Package(prog, pkgName, structs, vars, funcs, specialAsserts);
+        // Must set package to prevent duplicate definition error
+        funcs.forEach(func -> func.setPkg(pkgName));
+
+        Package pkg = new Package((FENode) null, pkgName, structs, vars, funcs, specialAsserts);
         namespaces.add(pkg);
 
         prog = prog.creator().streams(namespaces).create();
+
+        System.out.println("Test");
 
         return prog;
     }
 
     private Function constraintFunction(SygusProblem problem) {
         String functionName = "constraints";
-        Function.FunctionCreator fc = Function.creator(prog, functionName, Function.FcnType.Harness);
+        Function.FunctionCreator fc = Function.creator((FEContext) null, functionName, Function.FcnType.Harness);
 
         List<Statement> varDecls = problem.getVariables().stream()
                 .map(this::variableDeclWithHole)
@@ -84,7 +91,7 @@ public class SketchBuilder implements SygusNodeVisitor {
 
     private StmtVarDecl variableDeclWithHole(Variable v) {
         Type ty = (Type) v.getType().accept(this);
-        return new StmtVarDecl(prog, ty, v.getID(), new ExprStar(prog));
+        return new StmtVarDecl((FEContext) null, ty, v.getID(), new ExprStar(prog));
     }
 
     /**
@@ -97,7 +104,7 @@ public class SketchBuilder implements SygusNodeVisitor {
     @Override
     public List<Function> visitSynthFunction(SynthFunction func) {
         ArrayList<Function> sketchFuncs = new ArrayList<Function>();
-        Function.FunctionCreator fc = Function.creator(prog, func.getFunctionID(), Function.FcnType.Static);
+        Function.FunctionCreator fc = Function.creator((FEContext) null, func.getFunctionID(), Function.FcnType.Static);
 
         // Function arguments
         List<Parameter> params = func.getArgs().stream()
@@ -119,9 +126,10 @@ public class SketchBuilder implements SygusNodeVisitor {
         Function startFunc = generatorFuncs.get(0);
         String startFuncName = startFunc.getName();
         List<Expression> paramVars = params.stream()
-                .map(param -> new ExprVar(prog, param.getName()))
+                .map(param -> new ExprVar((FENode) null, param.getName()))
                 .collect(Collectors.toList());
-        Statement body = new StmtExpr(new ExprFunCall(prog, startFuncName, paramVars));
+        Expression generatorCall = new ExprFunCall((FENode) null, startFuncName, paramVars);
+        Statement body = new StmtReturn((FENode) null, generatorCall);
 
         fc.body(body);
         
@@ -137,7 +145,7 @@ public class SketchBuilder implements SygusNodeVisitor {
     private Parameter variableToParam(Variable var) {
         Type ty = (Type) var.getType().accept(this);
 
-        return new Parameter(prog, ty, var.getID());
+        return new Parameter((FENode) null, ty, var.getID());
     }
 
     @Override
@@ -168,11 +176,11 @@ public class SketchBuilder implements SygusNodeVisitor {
 
         switch(e.getOp()) {
             case UNOP_NOT:
-                return new ExprUnary(prog, ExprUnary.UNOP_NOT, subExpr);
+                return new ExprUnary((FENode) null, ExprUnary.UNOP_NOT, subExpr);
             case UNOP_BNOT:
-                return new ExprUnary(prog, ExprUnary.UNOP_BNOT, subExpr);
+                return new ExprUnary((FENode) null, ExprUnary.UNOP_BNOT, subExpr);
             case UNOP_NEG:
-                return new ExprUnary(prog, ExprUnary.UNOP_NEG, subExpr);
+                return new ExprUnary((FENode) null, ExprUnary.UNOP_NEG, subExpr);
             default:
                 throw new SketchConversionException("Unknown unary operator");
         }
@@ -186,33 +194,33 @@ public class SketchBuilder implements SygusNodeVisitor {
         switch(e.getOp()) {
             // Arithmetic
             case BINOP_ADD:
-                return new ExprBinary(prog, ExprBinary.BINOP_ADD, left, right);
+                return new ExprBinary((FENode) null, ExprBinary.BINOP_ADD, left, right);
             case BINOP_SUB:
-                return new ExprBinary(prog, ExprBinary.BINOP_SUB, left, right);
+                return new ExprBinary((FENode) null, ExprBinary.BINOP_SUB, left, right);
             case BINOP_MUL:
-                return new ExprBinary(prog, ExprBinary.BINOP_MUL, left, right);
+                return new ExprBinary((FENode) null, ExprBinary.BINOP_MUL, left, right);
             case BINOP_DIV:
-                return new ExprBinary(prog, ExprBinary.BINOP_DIV, left, right);
+                return new ExprBinary((FENode) null, ExprBinary.BINOP_DIV, left, right);
             case BINOP_MOD:
-                return new ExprBinary(prog, ExprBinary.BINOP_MOD, left, right);
+                return new ExprBinary((FENode) null, ExprBinary.BINOP_MOD, left, right);
             // Boolean
             case BINOP_AND:
-                return new ExprBinary(prog, ExprBinary.BINOP_AND, left, right);
+                return new ExprBinary((FENode) null, ExprBinary.BINOP_AND, left, right);
             case BINOP_OR:
-                return new ExprBinary(prog, ExprBinary.BINOP_OR, left, right);
+                return new ExprBinary((FENode) null, ExprBinary.BINOP_OR, left, right);
             // Comparison
             case BINOP_EQ:
-                return new ExprBinary(prog, ExprBinary.BINOP_EQ, left, right);
+                return new ExprBinary((FENode) null, ExprBinary.BINOP_EQ, left, right);
             case BINOP_NEQ:
-                return new ExprBinary(prog, ExprBinary.BINOP_NEQ, left, right);
+                return new ExprBinary((FENode) null, ExprBinary.BINOP_NEQ, left, right);
             case BINOP_LT:
-                return new ExprBinary(prog, ExprBinary.BINOP_LT, left, right);
+                return new ExprBinary((FENode) null, ExprBinary.BINOP_LT, left, right);
             case BINOP_LE:
-                return new ExprBinary(prog, ExprBinary.BINOP_LE, left, right);
+                return new ExprBinary((FENode) null, ExprBinary.BINOP_LE, left, right);
             case BINOP_GT:
-                return new ExprBinary(prog, ExprBinary.BINOP_GT, left, right);
+                return new ExprBinary((FENode) null, ExprBinary.BINOP_GT, left, right);
             case BINOP_GE:
-                return new ExprBinary(prog, ExprBinary.BINOP_GE, left, right);
+                return new ExprBinary((FENode) null, ExprBinary.BINOP_GE, left, right);
             default:
                 throw new SketchConversionException("Unknown binary operator");
         }
@@ -224,7 +232,7 @@ public class SketchBuilder implements SygusNodeVisitor {
         Expression consExpr = (Expression) e.getCons().accept(this);
         Expression altExpr = (Expression) e.getAlt().accept(this);
 
-        return new ExprTernary(prog, ExprTernary.TEROP_COND, condExpr, consExpr, altExpr);
+        return new ExprTernary((FENode) null, ExprTernary.TEROP_COND, condExpr, consExpr, altExpr);
     }
 
     @Override
@@ -233,12 +241,12 @@ public class SketchBuilder implements SygusNodeVisitor {
                 .map(e -> (Expression) e.accept(this))
                 .collect(Collectors.toList());
 
-        return new ExprFunCall(prog, f.getFunctionID(), params);
+        return new ExprFunCall((FENode) null, f.getFunctionID(), params);
     }
 
     @Override
     public Object visitVariable(Variable v) {
-        return new ExprVar(prog, v.getID());
+        return new ExprVar((FENode) null, v.getID());
     }
 
     /**
@@ -269,22 +277,25 @@ public class SketchBuilder implements SygusNodeVisitor {
                 prod.getLHS().getName()
         );
 
-        Function.FunctionCreator fc = Function.creator(prog, generatorID, Function.FcnType.Generator);
+        Type returnType = (Type) prod.getLHS().getType().accept(this);
+
+        Function.FunctionCreator fc = Function.creator((FEContext) null, generatorID, Function.FcnType.Generator);
         List<Statement> rhs = prod.getRHSList().stream()
                 .map(rhsTerm -> (Expression) rhsTerm.accept(this))
-                .map(expr -> new StmtReturn(prog, expr))
-                .map(stmt -> new StmtIfThen(prog, new ExprStar(prog), stmt, null))
+                .map(expr -> new StmtReturn((FENode) null, expr))
+                .map(stmt -> new StmtIfThen((FENode) null, new ExprStar(prog), stmt, null))
                 .collect(Collectors.toList());
-        Statement body = new StmtBlock(prog, rhs);
+        Statement body = new StmtBlock((FENode) null, rhs);
 
         fc.params(generatorParams);
+        fc.returnType(returnType);
         fc.body(body);
 
         return fc.create();
     }
 
     @Override
-    public ExprVar visitRHSVariable(RHSVariable v) { return new ExprVar(prog, v.getID()); }
+    public ExprVar visitRHSVariable(RHSVariable v) { return new ExprVar((FENode) null, v.getID()); }
 
     @Override
     public ExprFunCall visitRHSNonterminal(RHSNonterminal n) {
@@ -295,10 +306,10 @@ public class SketchBuilder implements SygusNodeVisitor {
         );
 
         List<Expression> paramVars = generatorParams.stream()
-                .map(param -> new ExprVar(prog, param.getName()))
+                .map(param -> new ExprVar((FENode) null, param.getName()))
                 .collect(Collectors.toList());
 
-        return new ExprFunCall(prog, generatorID, paramVars);
+        return new ExprFunCall((FENode) null, generatorID, paramVars);
     }
 
     @Override
@@ -315,7 +326,7 @@ public class SketchBuilder implements SygusNodeVisitor {
                 .map(e -> (Expression) e.accept(this))
                 .collect(Collectors.toList());
 
-        return new ExprFunCall(prog, f.getFunctionID(), params);
+        return new ExprFunCall((FENode) null, f.getFunctionID(), params);
     }
 
     @Override
@@ -324,11 +335,11 @@ public class SketchBuilder implements SygusNodeVisitor {
 
         switch(e.getOp()) {
             case UNOP_NOT:
-                return new ExprUnary(prog, ExprUnary.UNOP_NOT, subExpr);
+                return new ExprUnary((FENode) null, ExprUnary.UNOP_NOT, subExpr);
             case UNOP_BNOT:
-                return new ExprUnary(prog, ExprUnary.UNOP_BNOT, subExpr);
+                return new ExprUnary((FENode) null, ExprUnary.UNOP_BNOT, subExpr);
             case UNOP_NEG:
-                return new ExprUnary(prog, ExprUnary.UNOP_NEG, subExpr);
+                return new ExprUnary((FENode) null, ExprUnary.UNOP_NEG, subExpr);
             default:
                 throw new SketchConversionException("Unknown unary operator");
         }
@@ -342,33 +353,33 @@ public class SketchBuilder implements SygusNodeVisitor {
             switch(e.getOp()) {
                 // Arithmetic
                 case BINOP_ADD:
-                    return new ExprBinary(prog, ExprBinary.BINOP_ADD, left, right);
+                    return new ExprBinary((FENode) null, ExprBinary.BINOP_ADD, left, right);
                 case BINOP_SUB:
-                    return new ExprBinary(prog, ExprBinary.BINOP_SUB, left, right);
+                    return new ExprBinary((FENode) null, ExprBinary.BINOP_SUB, left, right);
                 case BINOP_MUL:
-                    return new ExprBinary(prog, ExprBinary.BINOP_MUL, left, right);
+                    return new ExprBinary((FENode) null, ExprBinary.BINOP_MUL, left, right);
                 case BINOP_DIV:
-                    return new ExprBinary(prog, ExprBinary.BINOP_DIV, left, right);
+                    return new ExprBinary((FENode) null, ExprBinary.BINOP_DIV, left, right);
                 case BINOP_MOD:
-                    return new ExprBinary(prog, ExprBinary.BINOP_MOD, left, right);
+                    return new ExprBinary((FENode) null, ExprBinary.BINOP_MOD, left, right);
                 // Boolean
                 case BINOP_AND:
-                    return new ExprBinary(prog, ExprBinary.BINOP_AND, left, right);
+                    return new ExprBinary((FENode) null, ExprBinary.BINOP_AND, left, right);
                 case BINOP_OR:
-                    return new ExprBinary(prog, ExprBinary.BINOP_OR, left, right);
+                    return new ExprBinary((FENode) null, ExprBinary.BINOP_OR, left, right);
                 // Comparison
                 case BINOP_EQ:
-                    return new ExprBinary(prog, ExprBinary.BINOP_EQ, left, right);
+                    return new ExprBinary((FENode) null, ExprBinary.BINOP_EQ, left, right);
                 case BINOP_NEQ:
-                    return new ExprBinary(prog, ExprBinary.BINOP_NEQ, left, right);
+                    return new ExprBinary((FENode) null, ExprBinary.BINOP_NEQ, left, right);
                 case BINOP_LT:
-                    return new ExprBinary(prog, ExprBinary.BINOP_LT, left, right);
+                    return new ExprBinary((FENode) null, ExprBinary.BINOP_LT, left, right);
                 case BINOP_LE:
-                    return new ExprBinary(prog, ExprBinary.BINOP_LE, left, right);
+                    return new ExprBinary((FENode) null, ExprBinary.BINOP_LE, left, right);
                 case BINOP_GT:
-                    return new ExprBinary(prog, ExprBinary.BINOP_GT, left, right);
+                    return new ExprBinary((FENode) null, ExprBinary.BINOP_GT, left, right);
                 case BINOP_GE:
-                    return new ExprBinary(prog, ExprBinary.BINOP_GE, left, right);
+                    return new ExprBinary((FENode) null, ExprBinary.BINOP_GE, left, right);
                 default:
                     throw new SketchConversionException("Unknown binary operator");
             }
@@ -380,6 +391,6 @@ public class SketchBuilder implements SygusNodeVisitor {
         Expression consExpr = (Expression) e.getCons().accept(this);
         Expression altExpr = (Expression) e.getAlt().accept(this);
 
-        return new ExprTernary(prog, ExprTernary.TEROP_COND, condExpr, consExpr, altExpr);
+        return new ExprTernary((FENode) null, ExprTernary.TEROP_COND, condExpr, consExpr, altExpr);
     }
 }

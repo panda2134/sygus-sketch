@@ -3,6 +3,7 @@ package sketch.api.sygus.solvers;
 import sketch.compiler.main.cmdline.SketchOptions;
 import sketch.util.cli.SketchCliParser;
 
+import java.io.File;
 import java.util.Arrays;
 
 public class SolverOptions extends SketchOptions {
