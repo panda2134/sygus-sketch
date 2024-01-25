@@ -25,6 +25,8 @@ public class SolverOptions extends SketchOptions {
         args = solverOpts.parse(parser).get_args();
         this.backendArgs = parser.backendArgs;
         this.nativeArgs = parser.nativeArgs;
+        
+        this.bndOpts.inlineAmnt = 2;
 
         // actions
         argsAsList = Arrays.asList(args);

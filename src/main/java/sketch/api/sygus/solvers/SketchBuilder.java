@@ -13,8 +13,7 @@ import sketch.compiler.ast.core.exprs.*;
 import sketch.compiler.ast.core.stmts.*;
 import sketch.compiler.ast.core.typs.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class SketchBuilder implements SygusNodeVisitor {
@@ -22,6 +21,9 @@ public class SketchBuilder implements SygusNodeVisitor {
     private Program prog;
     private List<Parameter> generatorParams;
     private SynthFunction currSynthFunction;
+    private Map<String, Type> nonterminalCxt;
+    private Map<String, Integer> generatorCxt;
+    private Map<String, Integer> maxCxt;
 
     public SketchBuilder() { }
 
@@ -31,8 +33,6 @@ public class SketchBuilder implements SygusNodeVisitor {
 
     @Override
     public Program visitSygusProblem(SygusProblem problem) {
-        System.out.println("Test");
-
         String pkgName = "SYGUS";
         List<ExprVar> vars = new ArrayList<ExprVar>();
         List<StructDef> structs = new ArrayList<StructDef>();
@@ -57,8 +57,6 @@ public class SketchBuilder implements SygusNodeVisitor {
         namespaces.add(pkg);
 
         prog = prog.creator().streams(namespaces).create();
-
-        System.out.println("Test");
 
         return prog;
     }
@@ -255,6 +253,12 @@ public class SketchBuilder implements SygusNodeVisitor {
      */
     @Override
     public List<Function> visitGrammar(Grammar g) {
+        nonterminalCxt = new HashMap<>();
+        for (Production rule: g.getRules()) {
+            Nonterminal n = rule.getLHS();
+            nonterminalCxt.put(n.getName(), (Type) n.getType().accept(this));
+        }
+
         List<Function> generatorFuncs = g.getRules().stream()
                 .map(rule -> (Function) rule.accept(this))
                 .collect(Collectors.toList());
@@ -278,14 +282,16 @@ public class SketchBuilder implements SygusNodeVisitor {
         );
 
         Type returnType = (Type) prod.getLHS().getType().accept(this);
+        maxCxt = new HashMap<>();
 
         Function.FunctionCreator fc = Function.creator((FEContext) null, generatorID, Function.FcnType.Generator);
         List<Statement> rhs = prod.getRHSList().stream()
-                .map(rhsTerm -> (Expression) rhsTerm.accept(this))
-                .map(expr -> new StmtReturn((FENode) null, expr))
-                .map(stmt -> new StmtIfThen((FENode) null, new ExprStar(prog), stmt, null))
+                .map(this::doRHSTerm)
                 .collect(Collectors.toList());
-        Statement body = new StmtBlock((FENode) null, rhs);
+        List<Statement> bodyStmts = new ArrayList<>();
+
+        bodyStmts.addAll(rhs);
+        Statement body = new StmtBlock((FENode) null, bodyStmts);
 
         fc.params(generatorParams);
         fc.returnType(returnType);
@@ -294,22 +300,66 @@ public class SketchBuilder implements SygusNodeVisitor {
         return fc.create();
     }
 
+    public Statement doRHSTerm(RHSTerm t) {
+        generatorCxt = new HashMap<>();
+        Expression e = (Expression) t.accept(this);
+
+        List<Type> types = new ArrayList<>();
+        List<String> names = new ArrayList<>();
+        List<Expression> inits = new ArrayList<>();
+
+        for (Map.Entry<String, Integer> entry : generatorCxt.entrySet()) {
+            String key = entry.getKey();
+            int value = entry.getValue();
+
+            int numPrevNonterminals = maxCxt.getOrDefault(key, 0);
+            if (numPrevNonterminals >= value)
+                continue;
+
+            for (int i=numPrevNonterminals; i<value; i++){
+                String varID = String.format("var_%s_%d", key, i);
+                String funID = String.format(
+                        "%s_%s_gen",
+                        currSynthFunction.getFunctionID(),
+                        key
+                );
+
+                List<Expression> paramVars = generatorParams.stream()
+                        .map(param -> new ExprVar((FENode) null, param.getName()))
+                        .collect(Collectors.toList());
+
+                names.add(varID);
+                types.add(nonterminalCxt.get(key));
+                inits.add(new ExprFunCall((FENode) null, funID, paramVars));
+            }
+        }
+
+        StmtVarDecl stmtVarDecl = new StmtVarDecl((FENode) null, types, names, inits);
+        StmtReturn stmtReturn = new StmtReturn((FENode) null, e);
+        StmtIfThen stmtIfThen = new StmtIfThen((FENode) null, new ExprStar(prog), stmtReturn, null);
+
+        StmtBlock stmt;
+        if (names.size() > 0) {
+            stmt = new StmtBlock((FENode) null, Arrays.asList(stmtVarDecl, stmtIfThen));
+        } else {
+            stmt = new StmtBlock((FENode) null, Arrays.asList(stmtIfThen));
+        }
+
+        return stmt;
+    }
+
     @Override
     public ExprVar visitRHSVariable(RHSVariable v) { return new ExprVar((FENode) null, v.getID()); }
 
     @Override
-    public ExprFunCall visitRHSNonterminal(RHSNonterminal n) {
-        String generatorID = String.format(
-                "%s_%s_gen",
-                currSynthFunction.getFunctionID(),
-                n.getNonterminal().getName()
-        );
+    public ExprVar visitRHSNonterminal(RHSNonterminal n) {
+        String nonterminalID = n.getNonterminal().getName();
+        int cnt = generatorCxt.getOrDefault(nonterminalID, 0);
+        String varID = String.format("var_%s_%d", nonterminalID, cnt);
 
-        List<Expression> paramVars = generatorParams.stream()
-                .map(param -> new ExprVar((FENode) null, param.getName()))
-                .collect(Collectors.toList());
+        generatorCxt.put(nonterminalID, cnt+1);
 
-        return new ExprFunCall((FENode) null, generatorID, paramVars);
+        return new ExprVar((FENode) null, varID);
     }
 
     @Override

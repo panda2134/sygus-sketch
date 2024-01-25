@@ -25,9 +25,9 @@ public abstract class SolverException extends SketchException {
     public void printInner(boolean message, boolean stacktrace, boolean program) {
         if (message) {
             if (showMessageClass()) {
-                printError("[SPYRO]", this.messageClass() + ":", this.getMessage());
+                printError("[SyGuS-Sketch]", this.messageClass() + ":", this.getMessage());
             } else {
-                printError("[SPYRO]", this.getMessage());
+                printError("[SyGuS-Sketch]", this.getMessage());
             }
             if (this.getCause() != null) {
                 printError("    Caused by: ", this.getCause().getMessage());
