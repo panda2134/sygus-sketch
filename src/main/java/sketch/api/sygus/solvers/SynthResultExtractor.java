@@ -44,8 +44,17 @@ public class SynthResultExtractor extends SymbolTableVisitor {
         if (targetFunctionSymbols.contains(functionName)) {
             SygusExpression e;
 
-            Pair<Integer, Statement> choice = getChoice(func.getBody());
+            Statement body = func.getBody();
+            if (!body.isBlock()) {
+                throw new OutputParseException("Synthesized function body must be a block");
+            }
 
+            Statement mainImpl = ((StmtBlock) body).getStmts().get(2);
+            if (!mainImpl.isBlock()) {
+                throw new OutputParseException("Failed to get main part of implementation body");
+            }
+
+            Pair<Integer, Statement> choice = getChoice(mainImpl);
             System.out.println(choice.getFirst());
             System.out.println(choice.getSecond());
 
@@ -59,35 +68,28 @@ public class SynthResultExtractor extends SymbolTableVisitor {
         return result;
     }
 
-    public Pair<Integer, Statement> getChoice(Statement body) {
-        if (!body.isBlock()) {
-            throw new OutputParseException("Synthesized function body must be a block");
-        }
-
-        Statement mainImpl = ((StmtBlock) body).getStmts().get(2);
-        if (!mainImpl.isBlock()) {
-            throw new OutputParseException("Failed to get main part of implementation body");
-        }
-
+    public Pair<Integer, Statement> getChoice(Statement mainImpl) {
         List<Statement> stmts = ((StmtBlock) mainImpl).getStmts();
         Statement condsBlock = stmts.get(stmts.size() - 1);
         stmts = ((StmtBlock) condsBlock).getStmts();
 
         int idx = 0;
-        int firstCond = -1;
         for(Statement stmt: stmts) {
-            if (stmt instanceof StmtIfThen) {
-                firstCond = idx - 1;
-                break;
+            System.out.println(idx);
+            System.out.println(stmt.getClass());
+            System.out.println(stmt);
+            if (stmt instanceof StmtBlock) {
+                List<Statement> innerStmts = ((StmtBlock) stmt).getStmts();
+                if (innerStmts.get(innerStmts.size() - 1) instanceof StmtIfThen)
+                    break;
             }
             idx += 1;
         }
 
-        if (idx == stmts.size() || firstCond < 0) {
-            throw new OutputParseException("Failed to find conditionals");
-        }
-
-        StmtIfThen firstConditional = (StmtIfThen) ((StmtBlock) stmts.get(firstCond)).getStmts().get(0);
+        int firstCond = idx - 1;
+        List<Statement> firstConditionalBlock = ((StmtBlock) stmts.get(firstCond)).getStmts();
+        firstConditionalBlock = ((StmtBlock) firstConditionalBlock.get(0)).getStmts();
+        StmtIfThen firstConditional = (StmtIfThen) firstConditionalBlock.get(firstConditionalBlock.size() - 1);
         ExprStar firstStar = (ExprStar) firstConditional.getCond();
 
         Type t = firstStar.getType();
@@ -96,9 +98,23 @@ public class SynthResultExtractor extends SymbolTableVisitor {
             return new Pair(0, firstConditional.getCons());
 
         for (idx = firstCond + 1; idx < stmts.size(); idx++) {
-            StmtIfThen stmt = (StmtIfThen) stmts.get(idx);
-            stmt = (StmtIfThen) ((StmtBlock) stmt.getCons()).getStmts().get(0);
+            List<Statement> block = ((StmtBlock) stmts.get(idx)).getStmts();
 
+            List<StmtIfThen> ifThenStmts = block.stream()
+                    .filter(innerStmt -> (innerStmt instanceof StmtIfThen))
+                    .map(innerStmt -> (StmtIfThen) innerStmt)
+                    .collect(Collectors.toList());
+
+            for(StmtIfThen stmtInner: ifThenStmts.subList(0, ifThenStmts.size() - 1)) {
+                StmtBlock innerBlock = (StmtBlock) ((StmtBlock) stmtInner.getCons()).getStmts().get(0);
+
+                Pair<Integer, Statement> innerChoice = getChoice(innerBlock);
+                System.out.println(innerChoice.getFirst());
+                System.out.println(innerChoice.getSecond());
+            }
+
+            StmtIfThen stmt = ifThenStmts.get(ifThenStmts.size() - 1);
+            stmt = (StmtIfThen) ((StmtBlock) stmt.getCons()).getStmts().get(0);
             ExprStar star = (ExprStar) stmt.getCond();
             t = star.getType();
             value = (ExprConstInt) oracle.popValueForNode(star.getDepObject(0), t);

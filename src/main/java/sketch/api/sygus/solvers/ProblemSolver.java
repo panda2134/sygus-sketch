@@ -32,7 +32,7 @@ public class ProblemSolver extends SequentialSketchMain {
 
         try {
             prog = buildSketchProgram();
-            prog.debugDump();
+            // prog.debugDump();
         } catch (SolverException se) {
             se.printStackTrace();
             throw se;
@@ -43,7 +43,7 @@ public class ProblemSolver extends SequentialSketchMain {
         }
 
         prog = this.preprocAndSemanticCheck(prog);
-        prog.debugDump();
+        // prog.debugDump();
 
         SynthesisResult synthResult = this.partialEvalAndSolve(prog);
         prog = synthResult.lowered.result;
@@ -61,16 +61,16 @@ public class ProblemSolver extends SequentialSketchMain {
         }
 
 //        substituted.debugDump();
-//        SynthResultExtractor extractor = new SynthResultExtractor(
-//                this.sygusProblem.getTargetFunctions(), synthResult.solution);
-//        finalCleaned.accept(extractor);
-;
+        SynthResultExtractor extractor = new SynthResultExtractor(
+                this.sygusProblem.getTargetFunctions(), synthResult.solution);
+        finalCleaned.accept(extractor);
+
         Program substitutedCleaned =
                 (new CleanupFinalCode(varGen, options,
                         visibleRControl(finalCleaned))).visitProgram(substituted);
 
         generateCode(substitutedCleaned);
-        this.log(1, "[SKETCH] DONE");
+        this.log(1, "[SyGuS-Sketch] DONE");
 
         return null;
     }
