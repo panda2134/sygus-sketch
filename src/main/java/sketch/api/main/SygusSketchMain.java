@@ -78,6 +78,8 @@ public class SygusSketchMain {
                 System.out.println(entry.getKey());
                 System.out.println(entry.getValue().toString());
             }
+        } else {
+            System.out.println("Failed to solve problem");
         }
     }
 }

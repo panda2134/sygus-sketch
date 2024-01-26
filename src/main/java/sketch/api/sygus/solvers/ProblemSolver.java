@@ -26,6 +26,10 @@ public class ProblemSolver extends SequentialSketchMain {
         PlatformLocalization.getLocalization().setTempDirs();
     }
 
+    public void setInlineAmnt(int bnd) {
+        super.options.bndOpts.inlineAmnt = bnd;
+    }
+
     private Program buildSketchProgram() {
         SketchBuilder builder = new SketchBuilder();
         sygusProblem.accept(builder);
