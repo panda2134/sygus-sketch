@@ -1,5 +1,6 @@
 package sketch.api.main;
 
+import sketch.api.sygus.lang.Output;
 import sketch.api.sygus.lang.SygusProblem;
 import sketch.api.sygus.lang.SynthFunction;
 import sketch.api.sygus.lang.expr.*;
@@ -9,9 +10,11 @@ import sketch.api.sygus.solvers.ProblemSolver;
 import sketch.api.sygus.solvers.SketchBuilder;
 import sketch.compiler.ast.core.Program;
 
+import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
 
 public class SygusSketchMain {
     public static void main(String[] args) {
@@ -29,14 +32,14 @@ public class SygusSketchMain {
         RHSNonterminal rhsNonB = new RHSNonterminal(nonB);
 
         List<RHSTerm> rhsE = new ArrayList<RHSTerm>();
-        rhsE.add(new RHSVariable("x"));
-        rhsE.add(new RHSVariable("y"));
+        rhsE.add(new RHSVariable("x", new TypePrimitive("int")));
+        rhsE.add(new RHSVariable("y", new TypePrimitive("int")));
         rhsE.add(new RHSIfThenElse(rhsNonB, rhsNonE, rhsNonE));
 
         List<RHSTerm> rhsB = new ArrayList<RHSTerm>();
         rhsB.add(new RHSConstBool(true));
         rhsB.add(new RHSConstBool(false));
-        rhsB.add(new RHSBinaryOp(RHSBinaryOp.BinaryOp.BINOP_LT, rhsNonE, rhsNonE));
+        rhsB.add(new RHSBinaryOp(ExprBinaryOp.BinaryOp.BINOP_LT, rhsNonE, rhsNonE));
 
         Production prodE = new Production(nonE, rhsE);
         Production prodB = new Production(nonB, rhsB);
@@ -68,6 +71,13 @@ public class SygusSketchMain {
         prob.addConstraint(constraint2);
 
         ProblemSolver solver = new ProblemSolver(prob);
-        solver.solve();
+        Output output = solver.solve();
+
+        if (output.isRealizable()) {
+            for (Map.Entry entry: output.getSolutions().entrySet()) {
+                System.out.println(entry.getKey());
+                System.out.println(entry.getValue().toString());
+            }
+        }
     }
 }

@@ -12,6 +12,7 @@ import sketch.compiler.ast.core.Package;
 import sketch.compiler.ast.core.exprs.*;
 import sketch.compiler.ast.core.stmts.*;
 import sketch.compiler.ast.core.typs.*;
+import sketch.util.Pair;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -24,11 +25,17 @@ public class SketchBuilder implements SygusNodeVisitor {
     private Map<String, Type> nonterminalCxt;
     private Map<String, Integer> generatorCxt;
     private Map<String, Integer> maxCxt;
+    private Map<String, List<List<Pair<String, Integer>>>> varDecls;
+    private List<List<Pair<String, Integer>>> varDeclCurrentProd;
 
     public SketchBuilder() { }
 
     public Program program() {
         return prog;
+    }
+
+    public VarDeclHints varDeclHints() {
+        return new VarDeclHints(varDecls);
     }
 
     @Override
@@ -41,11 +48,12 @@ public class SketchBuilder implements SygusNodeVisitor {
         List<Package> namespaces = new ArrayList<Package>();
 
         prog = Program.emptyProgram();
+        varDecls = new HashMap<>();
 
         // Add functions from SynthFunctions
         problem.getTargetFunctions().stream()
                 .map(synthFunction -> (List<Function>) synthFunction.accept(this))
-                .forEach(synthFunctions -> funcs.addAll(synthFunctions));
+                .forEach(funcs::addAll);
 
         // Add constraint function
         funcs.add(constraintFunction(problem));
@@ -89,7 +97,7 @@ public class SketchBuilder implements SygusNodeVisitor {
 
     private StmtVarDecl variableDeclWithHole(Variable v) {
         Type ty = (Type) v.getType().accept(this);
-        return new StmtVarDecl((FEContext) null, ty, v.getID(), new ExprStar(prog));
+        return new StmtVarDecl((FENode) null, ty, v.getID(), new ExprStar(prog));
     }
 
     /**
@@ -119,7 +127,7 @@ public class SketchBuilder implements SygusNodeVisitor {
 
         // Function body
         List<Function> generatorFuncs = (List<Function>) func.getGrammar().accept(this);
-        if (generatorFuncs.size() < 1)
+        if (generatorFuncs.isEmpty())
             throw new SketchConversionException("Grammar must have at least one symbol");
         Function startFunc = generatorFuncs.get(0);
         String startFuncName = startFunc.getName();
@@ -243,7 +251,7 @@ public class SketchBuilder implements SygusNodeVisitor {
     }
 
     @Override
-    public Object visitVariable(Variable v) {
+    public ExprVar visitVariable(Variable v) {
         return new ExprVar((FENode) null, v.getID());
     }
 
@@ -276,13 +284,17 @@ public class SketchBuilder implements SygusNodeVisitor {
 
     @Override
     public Function visitProduction(Production prod) {
+        String currNonterminal = prod.getLHS().getName();
         String generatorID = generatorFunctionName(
                 currSynthFunction.getFunctionID(),
-                prod.getLHS().getName()
+                currNonterminal
         );
 
         Type returnType = (Type) prod.getLHS().getType().accept(this);
         maxCxt = new HashMap<>();
+
+        varDeclCurrentProd = new ArrayList<>();
+        varDecls.put(currNonterminal, varDeclCurrentProd);
 
         Function.FunctionCreator fc = Function.creator((FEContext) null, generatorID, Function.FcnType.Generator);
         List<Statement> rhs = prod.getRHSList().stream()
@@ -308,6 +320,8 @@ public class SketchBuilder implements SygusNodeVisitor {
         List<String> names = new ArrayList<>();
         List<Expression> inits = new ArrayList<>();
 
+        List<Pair<String, Integer>> varDeclCurrentRule = new ArrayList<>();
+
         for (Map.Entry<String, Integer> entry : generatorCxt.entrySet()) {
             String key = entry.getKey();
             int value = entry.getValue();
@@ -331,15 +345,18 @@ public class SketchBuilder implements SygusNodeVisitor {
                 names.add(varID);
                 types.add(nonterminalCxt.get(key));
                 inits.add(new ExprFunCall((FENode) null, funID, paramVars));
+                varDeclCurrentRule.add(new Pair(key, i));
             }
         }
+
+        varDeclCurrentProd.add(varDeclCurrentRule);
 
         StmtVarDecl stmtVarDecl = new StmtVarDecl((FENode) null, types, names, inits);
         StmtReturn stmtReturn = new StmtReturn((FENode) null, e);
         StmtIfThen stmtIfThen = new StmtIfThen((FENode) null, new ExprStar(prog), stmtReturn, null);
 
         StmtBlock stmt;
-        if (names.size() > 0) {
+        if (!names.isEmpty()) {
             stmt = new StmtBlock((FENode) null, Arrays.asList(stmtVarDecl, stmtIfThen));
         } else {
             stmt = new StmtBlock((FENode) null, Arrays.asList(stmtIfThen));

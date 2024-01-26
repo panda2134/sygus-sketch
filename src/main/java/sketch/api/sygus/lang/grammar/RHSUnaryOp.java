@@ -1,6 +1,7 @@
 package sketch.api.sygus.lang.grammar;
 
 import sketch.api.sygus.lang.SygusNodeVisitor;
+import sketch.api.sygus.lang.expr.ExprUnaryOp.UnaryOp;
 
 /**
  * Class for unary operator expressions
@@ -8,12 +9,6 @@ import sketch.api.sygus.lang.SygusNodeVisitor;
  * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
  */
 public class RHSUnaryOp extends RHSTerm {
-
-    public enum UnaryOp {
-        UNOP_NOT, UNOP_BNOT, UNOP_NEG,
-        // below expressions are not supported now
-        UNOP_PREINC, UNOP_POSTINC, UNOP_PREDEC, UNOP_POSTDEC
-    }
 
     private UnaryOp op;
     private RHSTerm expr;

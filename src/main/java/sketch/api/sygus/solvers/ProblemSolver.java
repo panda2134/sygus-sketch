@@ -2,6 +2,7 @@ package sketch.api.sygus.solvers;
 
 import sketch.api.sygus.lang.Output;
 import sketch.api.sygus.lang.SygusProblem;
+import sketch.api.sygus.lang.expr.SygusExpression;
 import sketch.api.sygus.util.exception.SketchConversionException;
 import sketch.api.sygus.util.exception.SolverException;
 import sketch.compiler.ast.core.Program;
@@ -10,9 +11,14 @@ import sketch.compiler.main.passes.CleanupFinalCode;
 import sketch.compiler.main.passes.SubstituteSolution;
 import sketch.compiler.main.seq.SequentialSketchMain;
 import sketch.compiler.stencilSK.EliminateStarStatic;
+import sketch.util.Pair;
+
+import java.util.List;
+import java.util.Map;
 
 public class ProblemSolver extends SequentialSketchMain {
     private SygusProblem sygusProblem;
+    private VarDeclHints varDeclHints;
 
     public ProblemSolver(SygusProblem sygusProblem) {
         super(new SolverOptions());
@@ -23,6 +29,7 @@ public class ProblemSolver extends SequentialSketchMain {
     private Program buildSketchProgram() {
         SketchBuilder builder = new SketchBuilder();
         sygusProblem.accept(builder);
+        varDeclHints = builder.varDeclHints();
         return builder.program();
     }
 
@@ -39,6 +46,7 @@ public class ProblemSolver extends SequentialSketchMain {
         } catch (IllegalArgumentException ia) {
             throw ia;
         } catch (RuntimeException re) {
+            re.printStackTrace();
             throw new SketchConversionException("Failed to translate SyGuS problem to Sketch: " + re.getMessage());
         }
 
@@ -58,20 +66,17 @@ public class ProblemSolver extends SequentialSketchMain {
             substituted = (Program) finalCleaned.accept(eliminate_star);
         } else {
             substituted = finalCleaned;
+            return new Output(Output.Result.UNREALIZABLE ,null);
         }
 
 //        substituted.debugDump();
         SynthResultExtractor extractor = new SynthResultExtractor(
-                this.sygusProblem.getTargetFunctions(), synthResult.solution);
+                this.sygusProblem.getTargetFunctions(), synthResult.solution, varDeclHints);
         finalCleaned.accept(extractor);
+        Map<String, SygusExpression> solutions = extractor.getSynthResult();
 
-        Program substitutedCleaned =
-                (new CleanupFinalCode(varGen, options,
-                        visibleRControl(finalCleaned))).visitProgram(substituted);
-
-        generateCode(substitutedCleaned);
         this.log(1, "[SyGuS-Sketch] DONE");
 
-        return null;
+        return new Output(Output.Result.REALIZABLE, solutions);
     }
 }
