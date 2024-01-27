@@ -6,7 +6,7 @@
 
     <groupId>com.github.ebmoon</groupId>
     <artifactId>sygus-sketch</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.1</version>
 
     <name>sygus-sketch</name>
     <!-- FIXME change it to the project's website -->
@@ -26,5 +26,36 @@
         </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+            <!-- identify java source version -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.0.2</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+
+
+            <!-- package all dependencies -->
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptors>
+                        <descriptor>scripts/jar-assembly.xml</descriptor>
+                        <!-- assemblies:
+                            jar_assembly.xml    noarch jar with dependencies
+                            platform_jar_assembly.xml    jar with cegis from $sketch-backend-proj
+                            launchers_assembly    same as above but with scripts
+                            tar_src_assembly.xml    both frontend and backend source only. -->
+                    </descriptors>
+                    <finalName>sygus-sketch-${project.version}</finalName>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>
