@@ -20,14 +20,24 @@ public class RHSBinaryOp extends RHSTerm {
         this.right = right;
     }
 
-    public Object accept(SygusNodeVisitor visitor) { return visitor.visitRHSBinaryOp(this); }
+    public Object accept(SygusNodeVisitor visitor) {
+        return visitor.visitRHSBinaryOp(this);
+    }
 
-    public BinaryOp getOp() { return op; }
-    public RHSTerm getLeft() { return left; }
-    public RHSTerm getRight() { return right; }
+    public BinaryOp getOp() {
+        return op;
+    }
+
+    public RHSTerm getLeft() {
+        return left;
+    }
+
+    public RHSTerm getRight() {
+        return right;
+    }
 
     public String binaryOpToString(BinaryOp op) {
-        switch(op) {
+        switch (op) {
             case BINOP_ADD:
                 return "+";
             case BINOP_SUB:

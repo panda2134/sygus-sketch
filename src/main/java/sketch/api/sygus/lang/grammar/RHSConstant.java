@@ -7,5 +7,7 @@ package sketch.api.sygus.lang.grammar;
  */
 public abstract class RHSConstant extends RHSTerm {
     @Override
-    public boolean isConstant() { return true; }
+    public boolean isConstant() {
+        return true;
+    }
 }

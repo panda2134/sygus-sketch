@@ -9,28 +9,28 @@ import sketch.api.sygus.lang.SygusNodeVisitor;
  */
 public class ExprUnaryOp extends SygusExpression {
 
-    public enum UnaryOp {
-        UNOP_NOT, UNOP_BNOT, UNOP_NEG,
-        // below expressions are not supported now
-        UNOP_PREINC, UNOP_POSTINC, UNOP_PREDEC, UNOP_POSTDEC
-    }
-
     private UnaryOp op;
     private SygusExpression expr;
-
     public ExprUnaryOp(UnaryOp op, SygusExpression expr) {
         super();
         this.op = op;
         this.expr = expr;
     }
 
-    public Object accept(SygusNodeVisitor visitor) { return visitor.visitExprUnaryOp(this); }
+    public Object accept(SygusNodeVisitor visitor) {
+        return visitor.visitExprUnaryOp(this);
+    }
 
-    public UnaryOp getOp() { return op; }
-    public SygusExpression getExpr() { return expr; }
+    public UnaryOp getOp() {
+        return op;
+    }
+
+    public SygusExpression getExpr() {
+        return expr;
+    }
 
     public String unaryOpToString(UnaryOp op) {
-        switch(op) {
+        switch (op) {
             case UNOP_NOT:
             case UNOP_BNOT:
                 return "not";
@@ -43,5 +43,11 @@ public class ExprUnaryOp extends SygusExpression {
 
     public String toString() {
         return String.format("(%s %s)", unaryOpToString(op), expr.toString());
+    }
+
+    public enum UnaryOp {
+        UNOP_NOT, UNOP_BNOT, UNOP_NEG,
+        // below expressions are not supported now
+        UNOP_PREINC, UNOP_POSTINC, UNOP_PREDEC, UNOP_POSTDEC
     }
 }

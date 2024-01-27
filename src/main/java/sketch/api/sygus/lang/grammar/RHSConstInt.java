@@ -16,9 +16,15 @@ public class RHSConstInt extends RHSConstant {
         this.value = value;
     }
 
-    public Object accept(SygusNodeVisitor visitor) { return visitor.visitRHSConstInt(this); }
+    public Object accept(SygusNodeVisitor visitor) {
+        return visitor.visitRHSConstInt(this);
+    }
 
-    public int getValue() { return this.value; }
+    public int getValue() {
+        return this.value;
+    }
 
-    public String toString() { return String.valueOf(value); }
+    public String toString() {
+        return String.valueOf(value);
+    }
 }

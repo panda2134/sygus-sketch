@@ -2,8 +2,8 @@ package sketch.api.sygus.lang.expr;
 
 import sketch.api.sygus.lang.SygusNodeVisitor;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -22,10 +22,17 @@ public class ExprFunctionCall extends SygusExpression {
         this.args = new ArrayList<>(args);
     }
 
-    public Object accept(SygusNodeVisitor visitor) { return visitor.visitFunctionCall(this); }
+    public Object accept(SygusNodeVisitor visitor) {
+        return visitor.visitFunctionCall(this);
+    }
 
-    public String getFunctionID() { return functionID; }
-    public List<SygusExpression> getArgs() { return args; }
+    public String getFunctionID() {
+        return functionID;
+    }
+
+    public List<SygusExpression> getArgs() {
+        return args;
+    }
 
     public String toString() {
         String argsString = args.stream().map(SygusExpression::toString)

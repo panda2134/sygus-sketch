@@ -19,10 +19,19 @@ public abstract class SygusType extends SygusNode {
         return (id.equals("int") || id.equals("boolean"));
     }
 
-    public boolean isStruct () { return false; }
-    public boolean isArray () { return false; }
+    public boolean isStruct() {
+        return false;
+    }
 
-    public String getID() { return id; }
+    public boolean isArray() {
+        return false;
+    }
 
-    public String toString() { return id; }
+    public String getID() {
+        return id;
+    }
+
+    public String toString() {
+        return id;
+    }
 }

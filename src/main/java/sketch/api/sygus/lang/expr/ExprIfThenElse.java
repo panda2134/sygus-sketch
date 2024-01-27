@@ -24,9 +24,17 @@ public class ExprIfThenElse extends SygusExpression {
         return visitor.visitExprIfThenElse(this);
     }
 
-    public SygusExpression getCond() { return cond; }
-    public SygusExpression getCons() { return cons; }
-    public SygusExpression getAlt() { return alt; }
+    public SygusExpression getCond() {
+        return cond;
+    }
+
+    public SygusExpression getCons() {
+        return cons;
+    }
+
+    public SygusExpression getAlt() {
+        return alt;
+    }
 
     public String toString() {
         return String.format("(ite %s %s %s)", cond.toString(), cons.toString(), alt.toString());

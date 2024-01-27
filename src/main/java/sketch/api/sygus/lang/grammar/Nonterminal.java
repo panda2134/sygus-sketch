@@ -18,12 +18,22 @@ public class Nonterminal extends SygusNode {
         this.type = type;
     }
 
-    public Object accept(SygusNodeVisitor visitor) { return visitor.visitNonterminal(this); }
+    public Object accept(SygusNodeVisitor visitor) {
+        return visitor.visitNonterminal(this);
+    }
 
-    public String getName() { return name; }
-    public SygusType getType() { return type; }
+    public String getName() {
+        return name;
+    }
 
-    public String toString() { return name; }
+    public SygusType getType() {
+        return type;
+    }
+
+    public String toString() {
+        return name;
+    }
+
     public String toFullString() {
         return String.format("(%s %s)", name, type.toString());
     }

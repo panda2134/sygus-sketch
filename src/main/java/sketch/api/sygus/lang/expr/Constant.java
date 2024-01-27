@@ -7,5 +7,7 @@ package sketch.api.sygus.lang.expr;
  */
 public abstract class Constant extends SygusExpression {
     @Override
-    public boolean isConstant() { return true; }
+    public boolean isConstant() {
+        return true;
+    }
 }

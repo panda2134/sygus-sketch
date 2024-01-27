@@ -16,9 +16,15 @@ public class ConstBool extends Constant {
         this.value = value;
     }
 
-    public Object accept(SygusNodeVisitor visitor) { return visitor.visitConstBool(this); }
+    public Object accept(SygusNodeVisitor visitor) {
+        return visitor.visitConstBool(this);
+    }
 
-    public boolean getValue() { return value; }
+    public boolean getValue() {
+        return value;
+    }
 
-    public String toString() { return String.valueOf(value); }
+    public String toString() {
+        return String.valueOf(value);
+    }
 }

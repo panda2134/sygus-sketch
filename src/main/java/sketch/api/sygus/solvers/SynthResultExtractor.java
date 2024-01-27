@@ -6,10 +6,8 @@ import sketch.api.sygus.lang.grammar.Grammar;
 import sketch.api.sygus.lang.grammar.Production;
 import sketch.api.sygus.util.exception.OutputParseException;
 import sketch.compiler.ast.core.Function;
-import sketch.compiler.ast.core.SymbolTable;
 import sketch.compiler.ast.core.exprs.ExprConstInt;
 import sketch.compiler.ast.core.exprs.ExprStar;
-import sketch.compiler.ast.core.exprs.Expression;
 import sketch.compiler.ast.core.stmts.Statement;
 import sketch.compiler.ast.core.stmts.StmtBlock;
 import sketch.compiler.ast.core.stmts.StmtIfThen;
@@ -49,8 +47,7 @@ public class SynthResultExtractor extends SymbolTableVisitor {
         return synthResult;
     }
 
-    public Object visitFunction(Function func)
-    {
+    public Object visitFunction(Function func) {
         String functionName = func.getName();
         if (targetFunctionMap.containsKey(functionName)) {
             Grammar g = targetFunctionMap.get(functionName).getGrammar();
@@ -87,7 +84,7 @@ public class SynthResultExtractor extends SymbolTableVisitor {
 
         // Find the first conditional block
         int idx = 0;
-        for(Statement stmt: stmts) {
+        for (Statement stmt : stmts) {
             if (stmt instanceof StmtBlock) {
                 List<Statement> innerStmts = ((StmtBlock) stmt).getStmts();
                 if (innerStmts.get(innerStmts.size() - 1) instanceof StmtIfThen)
@@ -121,7 +118,7 @@ public class SynthResultExtractor extends SymbolTableVisitor {
 
             // Handle variable declaration which appears before choice block
             int cnt = 0;
-            for(StmtIfThen stmtInner: ifThenStmts.subList(0, ifThenStmts.size() - 1)) {
+            for (StmtIfThen stmtInner : ifThenStmts.subList(0, ifThenStmts.size() - 1)) {
                 StmtBlock innerBlock = (StmtBlock) ((StmtBlock) stmtInner.getCons()).getStmts().get(0);
                 Pair<String, Integer> varDeclHint = varDeclList.get(cnt++);
                 String nonterminalID = varDeclHint.getFirst();

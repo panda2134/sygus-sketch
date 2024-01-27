@@ -16,9 +16,15 @@ public class ConstInt extends Constant {
         this.value = value;
     }
 
-    public Object accept(SygusNodeVisitor visitor) { return visitor.visitConstInt(this); }
+    public Object accept(SygusNodeVisitor visitor) {
+        return visitor.visitConstInt(this);
+    }
 
-    public int getValue() { return this.value; }
+    public int getValue() {
+        return this.value;
+    }
 
-    public String toString() { return String.valueOf(value); }
+    public String toString() {
+        return String.valueOf(value);
+    }
 }

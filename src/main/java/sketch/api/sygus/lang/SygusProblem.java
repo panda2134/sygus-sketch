@@ -3,8 +3,8 @@ package sketch.api.sygus.lang;
 import sketch.api.sygus.lang.expr.SygusExpression;
 import sketch.api.sygus.lang.expr.Variable;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Class for SyGuS problem
@@ -26,18 +26,47 @@ public class SygusProblem extends SygusNode {
         return new SygusProblem(new ArrayList<Variable>(), new ArrayList<SynthFunction>(), new ArrayList<SygusExpression>());
     }
 
-    public Object accept(SygusNodeVisitor visitor) { return visitor.visitSygusProblem(this); }
+    public Object accept(SygusNodeVisitor visitor) {
+        return visitor.visitSygusProblem(this);
+    }
 
-    public List<Variable> getVariables() { return variables; }
-    public List<SynthFunction> getTargetFunctions() { return targetFunctions; }
-    public List<SygusExpression> getConstraints() { return constraints; }
+    public List<Variable> getVariables() {
+        return variables;
+    }
 
-    public void addVariable(Variable v) { variables.add(v); }
-    public void addTargetFunction(SynthFunction f) { targetFunctions.add(f); }
-    public void addConstraint(SygusExpression e) { constraints.add(e); }
-    public void addConstraints(List<SygusExpression> exprs) { constraints.addAll(exprs); }
+    public List<SynthFunction> getTargetFunctions() {
+        return targetFunctions;
+    }
 
-    public boolean removeVariable(Variable v) { return variables.remove(v); }
-    public boolean removeTargetFunction(SynthFunction f) { return targetFunctions.remove(f); }
-    public boolean removeConstraints(SygusExpression e) { return constraints.remove(e); }
+    public List<SygusExpression> getConstraints() {
+        return constraints;
+    }
+
+    public void addVariable(Variable v) {
+        variables.add(v);
+    }
+
+    public void addTargetFunction(SynthFunction f) {
+        targetFunctions.add(f);
+    }
+
+    public void addConstraint(SygusExpression e) {
+        constraints.add(e);
+    }
+
+    public void addConstraints(List<SygusExpression> exprs) {
+        constraints.addAll(exprs);
+    }
+
+    public boolean removeVariable(Variable v) {
+        return variables.remove(v);
+    }
+
+    public boolean removeTargetFunction(SynthFunction f) {
+        return targetFunctions.remove(f);
+    }
+
+    public boolean removeConstraints(SygusExpression e) {
+        return constraints.remove(e);
+    }
 }

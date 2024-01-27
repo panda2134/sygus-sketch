@@ -19,12 +19,22 @@ public class Variable extends SygusExpression {
         this.id = id;
     }
 
-    public Object accept(SygusNodeVisitor visitor) { return visitor.visitVariable(this); }
+    public Object accept(SygusNodeVisitor visitor) {
+        return visitor.visitVariable(this);
+    }
 
-    public String getID() { return id; }
-    public SygusType getType() { return type; }
+    public String getID() {
+        return id;
+    }
 
-    public String toString() { return id; }
+    public SygusType getType() {
+        return type;
+    }
+
+    public String toString() {
+        return id;
+    }
+
     public String toFullString() {
         return String.format("(%s %s)", id, type.toString());
     }

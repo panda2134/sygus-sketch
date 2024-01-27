@@ -7,13 +7,10 @@ import sketch.api.sygus.lang.expr.*;
 import sketch.api.sygus.lang.grammar.*;
 import sketch.api.sygus.lang.type.TypePrimitive;
 import sketch.api.sygus.solvers.ProblemSolver;
-import sketch.api.sygus.solvers.SketchBuilder;
-import sketch.compiler.ast.core.Program;
 
-import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.Map;
 
 public class SygusSketchMain {
@@ -74,7 +71,7 @@ public class SygusSketchMain {
         Output output = solver.solve();
 
         if (output.isRealizable()) {
-            for (Map.Entry entry: output.getSolutions().entrySet()) {
+            for (Map.Entry entry : output.getSolutions().entrySet()) {
                 System.out.println(entry.getKey());
                 System.out.println(entry.getValue().toString());
             }

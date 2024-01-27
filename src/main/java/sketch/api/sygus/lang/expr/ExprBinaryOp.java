@@ -9,18 +9,8 @@ import sketch.api.sygus.lang.SygusNodeVisitor;
  */
 public class ExprBinaryOp extends SygusExpression {
 
-    public enum BinaryOp {
-        BINOP_ADD, BINOP_SUB, BINOP_MUL, BINOP_DIV, BINOP_MOD,
-        BINOP_AND, BINOP_OR,
-        BINOP_EQ, BINOP_NEQ, BINOP_LT, BINOP_LE, BINOP_GT, BINOP_GE,
-        // below expressions are not supported now
-        BINOP_BAND, BINOP_BOR, BINOP_BXOR,
-        BINOP_LSHIFT, BINOP_RSHIFT
-    }
-
     private BinaryOp op;
     private SygusExpression left, right;
-
     public ExprBinaryOp(BinaryOp op, SygusExpression left, SygusExpression right) {
         super();
         this.op = op;
@@ -28,14 +18,24 @@ public class ExprBinaryOp extends SygusExpression {
         this.right = right;
     }
 
-    public Object accept(SygusNodeVisitor visitor) { return visitor.visitExprBinaryOp(this); }
+    public Object accept(SygusNodeVisitor visitor) {
+        return visitor.visitExprBinaryOp(this);
+    }
 
-    public BinaryOp getOp() { return op; }
-    public SygusExpression getLeft() { return left; }
-    public SygusExpression getRight() { return right; }
+    public BinaryOp getOp() {
+        return op;
+    }
+
+    public SygusExpression getLeft() {
+        return left;
+    }
+
+    public SygusExpression getRight() {
+        return right;
+    }
 
     public String binaryOpToString(BinaryOp op) {
-        switch(op) {
+        switch (op) {
             case BINOP_ADD:
                 return "+";
             case BINOP_SUB:
@@ -69,5 +69,14 @@ public class ExprBinaryOp extends SygusExpression {
 
     public String toString() {
         return String.format("(%s %s %s)", binaryOpToString(op), left.toString(), right.toString());
+    }
+
+    public enum BinaryOp {
+        BINOP_ADD, BINOP_SUB, BINOP_MUL, BINOP_DIV, BINOP_MOD,
+        BINOP_AND, BINOP_OR,
+        BINOP_EQ, BINOP_NEQ, BINOP_LT, BINOP_LE, BINOP_GT, BINOP_GE,
+        // below expressions are not supported now
+        BINOP_BAND, BINOP_BOR, BINOP_BXOR,
+        BINOP_LSHIFT, BINOP_RSHIFT
     }
 }

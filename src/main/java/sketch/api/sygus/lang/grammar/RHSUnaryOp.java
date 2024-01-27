@@ -19,13 +19,20 @@ public class RHSUnaryOp extends RHSTerm {
         this.expr = expr;
     }
 
-    public Object accept(SygusNodeVisitor visitor) { return visitor.visitRHSUnaryOp(this); }
+    public Object accept(SygusNodeVisitor visitor) {
+        return visitor.visitRHSUnaryOp(this);
+    }
 
-    public UnaryOp getOp() { return op; }
-    public RHSTerm getExpr() { return expr; }
+    public UnaryOp getOp() {
+        return op;
+    }
+
+    public RHSTerm getExpr() {
+        return expr;
+    }
 
     public String unaryOpToString(UnaryOp op) {
-        switch(op) {
+        switch (op) {
             case UNOP_NOT:
             case UNOP_BNOT:
                 return "not";

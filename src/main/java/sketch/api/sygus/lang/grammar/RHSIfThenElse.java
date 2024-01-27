@@ -1,7 +1,6 @@
 package sketch.api.sygus.lang.grammar;
 
 import sketch.api.sygus.lang.SygusNodeVisitor;
-import sketch.api.sygus.lang.expr.SygusExpression;
 
 /**
  * Class for if-then-else expression
@@ -25,9 +24,17 @@ public class RHSIfThenElse extends RHSTerm {
         return visitor.visitRHSIfThenElse(this);
     }
 
-    public RHSTerm getCond() { return cond; }
-    public RHSTerm getCons() { return cons; }
-    public RHSTerm getAlt() { return alt; }
+    public RHSTerm getCond() {
+        return cond;
+    }
+
+    public RHSTerm getCons() {
+        return cons;
+    }
+
+    public RHSTerm getAlt() {
+        return alt;
+    }
 
     public String toString() {
         return String.format("(ite %s %s %s)", cond.toString(), cons.toString(), alt.toString());

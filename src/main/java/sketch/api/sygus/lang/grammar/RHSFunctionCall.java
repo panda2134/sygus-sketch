@@ -22,10 +22,17 @@ public class RHSFunctionCall extends RHSTerm {
         this.args = new ArrayList<>(args);
     }
 
-    public Object accept(SygusNodeVisitor visitor) { return visitor.visitRHSFunctionCall(this); }
+    public Object accept(SygusNodeVisitor visitor) {
+        return visitor.visitRHSFunctionCall(this);
+    }
 
-    public String getFunctionID() { return functionID; }
-    public List<RHSTerm> getArgs() { return args; }
+    public String getFunctionID() {
+        return functionID;
+    }
+
+    public List<RHSTerm> getArgs() {
+        return args;
+    }
 
     public String toString() {
         String argsString = args.stream().map(RHSTerm::toString)

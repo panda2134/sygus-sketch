@@ -3,15 +3,16 @@ package sketch.api.sygus.solvers;
 import sketch.api.sygus.lang.SygusNodeVisitor;
 import sketch.api.sygus.lang.SygusProblem;
 import sketch.api.sygus.lang.SynthFunction;
-import sketch.api.sygus.lang.type.TypePrimitive;
 import sketch.api.sygus.lang.expr.*;
 import sketch.api.sygus.lang.grammar.*;
+import sketch.api.sygus.lang.type.TypePrimitive;
 import sketch.api.sygus.util.exception.SketchConversionException;
-import sketch.compiler.ast.core.*;
 import sketch.compiler.ast.core.Package;
+import sketch.compiler.ast.core.*;
 import sketch.compiler.ast.core.exprs.*;
 import sketch.compiler.ast.core.stmts.*;
-import sketch.compiler.ast.core.typs.*;
+import sketch.compiler.ast.core.typs.StructDef;
+import sketch.compiler.ast.core.typs.Type;
 import sketch.util.Pair;
 
 import java.util.*;
@@ -28,7 +29,8 @@ public class SketchBuilder implements SygusNodeVisitor {
     private Map<String, List<List<Pair<String, Integer>>>> varDecls;
     private List<List<Pair<String, Integer>>> varDeclCurrentProd;
 
-    public SketchBuilder() { }
+    public SketchBuilder() {
+    }
 
     public Program program() {
         return prog;
@@ -138,7 +140,7 @@ public class SketchBuilder implements SygusNodeVisitor {
         Statement body = new StmtReturn((FENode) null, generatorCall);
 
         fc.body(body);
-        
+
         this.generatorParams = null;
         this.currSynthFunction = null;
 
@@ -156,7 +158,7 @@ public class SketchBuilder implements SygusNodeVisitor {
 
     @Override
     public sketch.compiler.ast.core.typs.TypePrimitive visitTypePrimitive(TypePrimitive ty) {
-        switch(ty.getPredefinedType()) {
+        switch (ty.getPredefinedType()) {
             case TYPE_INT:
                 return sketch.compiler.ast.core.typs.TypePrimitive.inttype;
             case TYPE_BOOLEAN:
@@ -180,7 +182,7 @@ public class SketchBuilder implements SygusNodeVisitor {
     public ExprUnary visitExprUnaryOp(ExprUnaryOp e) {
         Expression subExpr = (Expression) e.getExpr().accept(this);
 
-        switch(e.getOp()) {
+        switch (e.getOp()) {
             case UNOP_NOT:
                 return new ExprUnary((FENode) null, ExprUnary.UNOP_NOT, subExpr);
             case UNOP_BNOT:
@@ -197,7 +199,7 @@ public class SketchBuilder implements SygusNodeVisitor {
         Expression left = (Expression) e.getLeft().accept(this);
         Expression right = (Expression) e.getRight().accept(this);
 
-        switch(e.getOp()) {
+        switch (e.getOp()) {
             // Arithmetic
             case BINOP_ADD:
                 return new ExprBinary((FENode) null, ExprBinary.BINOP_ADD, left, right);
@@ -262,7 +264,7 @@ public class SketchBuilder implements SygusNodeVisitor {
     @Override
     public List<Function> visitGrammar(Grammar g) {
         nonterminalCxt = new HashMap<>();
-        for (Production rule: g.getRules()) {
+        for (Production rule : g.getRules()) {
             Nonterminal n = rule.getLHS();
             nonterminalCxt.put(n.getName(), (Type) n.getType().accept(this));
         }
@@ -330,7 +332,7 @@ public class SketchBuilder implements SygusNodeVisitor {
             if (numPrevNonterminals >= value)
                 continue;
 
-            for (int i=numPrevNonterminals; i<value; i++){
+            for (int i = numPrevNonterminals; i < value; i++) {
                 String varID = String.format("var_%s_%d", key, i);
                 String funID = String.format(
                         "%s_%s_gen",
@@ -366,7 +368,9 @@ public class SketchBuilder implements SygusNodeVisitor {
     }
 
     @Override
-    public ExprVar visitRHSVariable(RHSVariable v) { return new ExprVar((FENode) null, v.getID()); }
+    public ExprVar visitRHSVariable(RHSVariable v) {
+        return new ExprVar((FENode) null, v.getID());
+    }
 
     @Override
     public ExprVar visitRHSNonterminal(RHSNonterminal n) {
@@ -374,7 +378,7 @@ public class SketchBuilder implements SygusNodeVisitor {
         int cnt = generatorCxt.getOrDefault(nonterminalID, 0);
         String varID = String.format("var_%s_%d", nonterminalID, cnt);
 
-        generatorCxt.put(nonterminalID, cnt+1);
+        generatorCxt.put(nonterminalID, cnt + 1);
 
         return new ExprVar((FENode) null, varID);
     }
@@ -385,7 +389,9 @@ public class SketchBuilder implements SygusNodeVisitor {
     }
 
     @Override
-    public ExprConstInt visitRHSConstInt(RHSConstInt n) { return ExprConstInt.createConstant(n.getValue()); }
+    public ExprConstInt visitRHSConstInt(RHSConstInt n) {
+        return ExprConstInt.createConstant(n.getValue());
+    }
 
     @Override
     public ExprFunCall visitRHSFunctionCall(RHSFunctionCall f) {
@@ -400,7 +406,7 @@ public class SketchBuilder implements SygusNodeVisitor {
     public ExprUnary visitRHSUnaryOp(RHSUnaryOp e) {
         Expression subExpr = (Expression) e.getExpr().accept(this);
 
-        switch(e.getOp()) {
+        switch (e.getOp()) {
             case UNOP_NOT:
                 return new ExprUnary((FENode) null, ExprUnary.UNOP_NOT, subExpr);
             case UNOP_BNOT:
@@ -414,42 +420,42 @@ public class SketchBuilder implements SygusNodeVisitor {
 
     @Override
     public ExprBinary visitRHSBinaryOp(RHSBinaryOp e) {
-            Expression left = (Expression) e.getLeft().accept(this);
-            Expression right = (Expression) e.getRight().accept(this);
+        Expression left = (Expression) e.getLeft().accept(this);
+        Expression right = (Expression) e.getRight().accept(this);
 
-            switch(e.getOp()) {
-                // Arithmetic
-                case BINOP_ADD:
-                    return new ExprBinary((FENode) null, ExprBinary.BINOP_ADD, left, right);
-                case BINOP_SUB:
-                    return new ExprBinary((FENode) null, ExprBinary.BINOP_SUB, left, right);
-                case BINOP_MUL:
-                    return new ExprBinary((FENode) null, ExprBinary.BINOP_MUL, left, right);
-                case BINOP_DIV:
-                    return new ExprBinary((FENode) null, ExprBinary.BINOP_DIV, left, right);
-                case BINOP_MOD:
-                    return new ExprBinary((FENode) null, ExprBinary.BINOP_MOD, left, right);
-                // Boolean
-                case BINOP_AND:
-                    return new ExprBinary((FENode) null, ExprBinary.BINOP_AND, left, right);
-                case BINOP_OR:
-                    return new ExprBinary((FENode) null, ExprBinary.BINOP_OR, left, right);
-                // Comparison
-                case BINOP_EQ:
-                    return new ExprBinary((FENode) null, ExprBinary.BINOP_EQ, left, right);
-                case BINOP_NEQ:
-                    return new ExprBinary((FENode) null, ExprBinary.BINOP_NEQ, left, right);
-                case BINOP_LT:
-                    return new ExprBinary((FENode) null, ExprBinary.BINOP_LT, left, right);
-                case BINOP_LE:
-                    return new ExprBinary((FENode) null, ExprBinary.BINOP_LE, left, right);
-                case BINOP_GT:
-                    return new ExprBinary((FENode) null, ExprBinary.BINOP_GT, left, right);
-                case BINOP_GE:
-                    return new ExprBinary((FENode) null, ExprBinary.BINOP_GE, left, right);
-                default:
-                    throw new SketchConversionException("Unknown binary operator");
-            }
+        switch (e.getOp()) {
+            // Arithmetic
+            case BINOP_ADD:
+                return new ExprBinary((FENode) null, ExprBinary.BINOP_ADD, left, right);
+            case BINOP_SUB:
+                return new ExprBinary((FENode) null, ExprBinary.BINOP_SUB, left, right);
+            case BINOP_MUL:
+                return new ExprBinary((FENode) null, ExprBinary.BINOP_MUL, left, right);
+            case BINOP_DIV:
+                return new ExprBinary((FENode) null, ExprBinary.BINOP_DIV, left, right);
+            case BINOP_MOD:
+                return new ExprBinary((FENode) null, ExprBinary.BINOP_MOD, left, right);
+            // Boolean
+            case BINOP_AND:
+                return new ExprBinary((FENode) null, ExprBinary.BINOP_AND, left, right);
+            case BINOP_OR:
+                return new ExprBinary((FENode) null, ExprBinary.BINOP_OR, left, right);
+            // Comparison
+            case BINOP_EQ:
+                return new ExprBinary((FENode) null, ExprBinary.BINOP_EQ, left, right);
+            case BINOP_NEQ:
+                return new ExprBinary((FENode) null, ExprBinary.BINOP_NEQ, left, right);
+            case BINOP_LT:
+                return new ExprBinary((FENode) null, ExprBinary.BINOP_LT, left, right);
+            case BINOP_LE:
+                return new ExprBinary((FENode) null, ExprBinary.BINOP_LE, left, right);
+            case BINOP_GT:
+                return new ExprBinary((FENode) null, ExprBinary.BINOP_GT, left, right);
+            case BINOP_GE:
+                return new ExprBinary((FENode) null, ExprBinary.BINOP_GE, left, right);
+            default:
+                throw new SketchConversionException("Unknown binary operator");
+        }
     }
 
     @Override

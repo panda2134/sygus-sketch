@@ -12,11 +12,6 @@ public class TypePrimitive extends SygusType {
 
     private PredefinedType ty;
 
-    public enum PredefinedType {
-        TYPE_INT,
-        TYPE_BOOLEAN
-    }
-
     public TypePrimitive(String id) {
         super(id);
         if (id.equals("int")) {
@@ -30,8 +25,15 @@ public class TypePrimitive extends SygusType {
 
     @Override
     public Object accept(SygusNodeVisitor v) {
-       return v.visitTypePrimitive(this);
+        return v.visitTypePrimitive(this);
     }
 
-    public PredefinedType getPredefinedType() { return ty; }
+    public PredefinedType getPredefinedType() {
+        return ty;
+    }
+
+    public enum PredefinedType {
+        TYPE_INT,
+        TYPE_BOOLEAN
+    }
 }

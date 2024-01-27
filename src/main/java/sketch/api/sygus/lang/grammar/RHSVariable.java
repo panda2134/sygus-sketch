@@ -18,12 +18,22 @@ public class RHSVariable extends RHSTerm {
         this.type = type;
     }
 
-    public Object accept(SygusNodeVisitor visitor) { return visitor.visitRHSVariable(this); }
+    public Object accept(SygusNodeVisitor visitor) {
+        return visitor.visitRHSVariable(this);
+    }
 
-    public String getID() { return id; }
-    public SygusType getType() { return type; }
+    public String getID() {
+        return id;
+    }
 
-    public String toString() { return id; }
+    public SygusType getType() {
+        return type;
+    }
+
+    public String toString() {
+        return id;
+    }
+
     public String toFullString() {
         return String.format("(%s %s)", id, type.toString());
     }

@@ -14,8 +14,15 @@ public class Production extends SygusNode {
         this.rhsList = rhsList;
     }
 
-    public Object accept(SygusNodeVisitor visitor) { return visitor.visitProduction(this); }
+    public Object accept(SygusNodeVisitor visitor) {
+        return visitor.visitProduction(this);
+    }
 
-    public Nonterminal getLHS() { return lhs; }
-    public List<RHSTerm> getRHSList() { return rhsList; }
+    public Nonterminal getLHS() {
+        return lhs;
+    }
+
+    public List<RHSTerm> getRHSList() {
+        return rhsList;
+    }
 }

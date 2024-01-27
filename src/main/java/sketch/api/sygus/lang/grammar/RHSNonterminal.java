@@ -14,10 +14,16 @@ public class RHSNonterminal extends RHSTerm {
         this.nonterminal = nonterminal;
     }
 
-    public Object accept(SygusNodeVisitor visitor) { return visitor.visitRHSNonterminal(this); }
+    public Object accept(SygusNodeVisitor visitor) {
+        return visitor.visitRHSNonterminal(this);
+    }
 
-    public Nonterminal getNonterminal() { return nonterminal; }
+    public Nonterminal getNonterminal() {
+        return nonterminal;
+    }
 
-    public String toString() { return nonterminal.toString(); }
+    public String toString() {
+        return nonterminal.toString();
+    }
 }
 

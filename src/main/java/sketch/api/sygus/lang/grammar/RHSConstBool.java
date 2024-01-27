@@ -16,9 +16,15 @@ public class RHSConstBool extends RHSConstant {
         this.value = value;
     }
 
-    public Object accept(SygusNodeVisitor visitor) { return visitor.visitRHSConstBool(this); }
+    public Object accept(SygusNodeVisitor visitor) {
+        return visitor.visitRHSConstBool(this);
+    }
 
-    public boolean getValue() { return value; }
+    public boolean getValue() {
+        return value;
+    }
 
-    public String toString() { return String.valueOf(value); }
+    public String toString() {
+        return String.valueOf(value);
+    }
 }

@@ -9,5 +9,8 @@ import sketch.api.sygus.lang.SygusNode;
  */
 public abstract class RHSTerm extends SygusNode {
     public abstract String toString();
-    public boolean isConstant() { return false; }
+
+    public boolean isConstant() {
+        return false;
+    }
 }
