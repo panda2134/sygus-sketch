@@ -69,6 +69,7 @@ public class ProblemSolver extends SequentialSketchMain {
         } else {
             output = new Output(Output.Result.UNREALIZABLE, null);
         }
+
         return output;
     }
 }

@@ -93,51 +93,115 @@ public class SynthResultExtractor extends SymbolTableVisitor {
             idx += 1;
         }
 
-        int firstCond = idx - 1;
+        int firstCond;
+        // If grammar only has one rule
+        if (idx == stmts.size()) {
+            // The second last statement (the last one is assert false)
+            firstCond = idx - 2;
+        } else {
+            firstCond = idx - 1;
+        }
         List<Statement> firstConditionalBlock = ((StmtBlock) stmts.get(firstCond)).getStmts();
-        firstConditionalBlock = ((StmtBlock) firstConditionalBlock.get(0)).getStmts();
-        StmtIfThen firstConditional = (StmtIfThen) firstConditionalBlock.get(firstConditionalBlock.size() - 1);
-        ExprStar firstStar = (ExprStar) firstConditional.getCond();
-
-        Type t = firstStar.getType();
-        ExprConstInt value = (ExprConstInt) oracle.popValueForNode(firstStar.getDepObject(0), t);
-        if (value.getVal() != 0)
+        List<Pair<String, Integer>> varDeclList = varDeclHints
+                .varDeclsForChoice(prod.getLHS().getName(), 0);
+        int value = extractHoleValueFromFirstBlock(firstConditionalBlock, intermediateVars, varDeclList);
+        if (value != 0)
             return constructExpressionFromChoice(prod, intermediateVars, 0);
 
         // If the first conditional was not chosen, look at other conditional blocks
-        for (idx = firstCond + 1; idx < stmts.size(); idx++) {
+        for (idx = firstCond + 1; idx < stmts.size() - 1; idx++) {
             List<Statement> block = ((StmtBlock) stmts.get(idx)).getStmts();
-
-            List<StmtIfThen> ifThenStmts = block.stream()
-                    .filter(innerStmt -> (innerStmt instanceof StmtIfThen))
-                    .map(innerStmt -> (StmtIfThen) innerStmt)
-                    .collect(Collectors.toList());
-
-            List<Pair<String, Integer>> varDeclList = varDeclHints
+            varDeclList = varDeclHints
                     .varDeclsForChoice(prod.getLHS().getName(), idx - firstCond);
 
             // Handle variable declaration which appears before choice block
-            int cnt = 0;
-            for (StmtIfThen stmtInner : ifThenStmts.subList(0, ifThenStmts.size() - 1)) {
-                StmtBlock innerBlock = (StmtBlock) ((StmtBlock) stmtInner.getCons()).getStmts().get(0);
-                Pair<String, Integer> varDeclHint = varDeclList.get(cnt++);
-                String nonterminalID = varDeclHint.getFirst();
-                String varID = String.format("var_%s_%d", nonterminalID, varDeclHint.getSecond());
-
-                SygusExpression innerExpr = extractExpression(productionMap.get(nonterminalID), innerBlock);
-                intermediateVars.put(varID, innerExpr);
-            }
-
-            StmtIfThen stmt = ifThenStmts.get(ifThenStmts.size() - 1);
-            stmt = (StmtIfThen) ((StmtBlock) stmt.getCons()).getStmts().get(0);
-            ExprStar star = (ExprStar) stmt.getCond();
-            t = star.getType();
-            value = (ExprConstInt) oracle.popValueForNode(star.getDepObject(0), t);
-            if (value.getVal() != 0)
+            value = extractHoleValueFromBlock(block, intermediateVars, varDeclList);
+            if (value != 0)
                 return constructExpressionFromChoice(prod, intermediateVars, idx - firstCond);
         }
 
         throw new OutputParseException("Failed to parse generator choice");
+    }
+
+    // For debugging
+    private void enumerateStatements(List<Statement> stmts) {
+        int idx = 0;
+        for(Statement stmt : stmts) {
+            System.out.println(idx++);
+            System.out.println(stmt.getClass());
+            System.out.println(stmt.toString());
+        }
+    }
+
+    private int extractHoleValueFromFirstBlock(
+            List<Statement> block,
+            Map<String, SygusExpression> intermediateVars,
+            List<Pair<String, Integer>> varDeclList
+    ) {
+//        int idx = 0;
+//        for(Statement stmt : block) {
+//            System.out.println(idx++);
+//            System.out.println(stmt.getClass());
+//            System.out.println(stmt.toString());
+//        }
+
+        List<StmtBlock> blockStmts = block.stream()
+                .filter(innerStmt -> (innerStmt instanceof StmtBlock))
+                .map(innerStmt -> (StmtBlock) innerStmt)
+                .collect(Collectors.toList());
+
+        // Handle variable declaration which appears before choice block
+        int cnt = 0;
+        for (StmtBlock stmtInner : blockStmts.subList(0, blockStmts.size() - 1)) {
+            StmtBlock innerBlock = (StmtBlock) stmtInner.getStmts().get(0);
+            Pair<String, Integer> varDeclHint = varDeclList.get(cnt++);
+            String nonterminalID = varDeclHint.getFirst();
+            String varID = String.format("var_%s_%d", nonterminalID, varDeclHint.getSecond());
+
+            SygusExpression innerExpr = extractExpression(productionMap.get(nonterminalID), innerBlock);
+            intermediateVars.put(varID, innerExpr);
+        }
+
+        StmtBlock lastBlock = blockStmts.get(blockStmts.size() - 1);
+        StmtIfThen stmt = (StmtIfThen) lastBlock.getStmts().get(0);
+        ExprStar star = (ExprStar) stmt.getCond();
+        Type t = star.getType();
+        return ((ExprConstInt) oracle.popValueForNode(star.getDepObject(0), t)).getVal();
+    }
+    private int extractHoleValueFromBlock(
+            List<Statement> block,
+            Map<String, SygusExpression> intermediateVars,
+            List<Pair<String, Integer>> varDeclList
+    ) {
+//        int idx = 0;
+//        for(Statement stmt : block) {
+//            System.out.println(idx++);
+//            System.out.println(stmt.getClass());
+//            System.out.println(stmt.toString());
+//        }
+
+        List<StmtIfThen> ifThenStmts = block.stream()
+                .filter(innerStmt -> (innerStmt instanceof StmtIfThen))
+                .map(innerStmt -> (StmtIfThen) innerStmt)
+                .collect(Collectors.toList());
+
+        // Handle variable declaration which appears before choice block
+        int cnt = 0;
+        for (StmtIfThen stmtInner : ifThenStmts.subList(0, ifThenStmts.size() - 1)) {
+            StmtBlock innerBlock = (StmtBlock) ((StmtBlock) stmtInner.getCons()).getStmts().get(0);
+            Pair<String, Integer> varDeclHint = varDeclList.get(cnt++);
+            String nonterminalID = varDeclHint.getFirst();
+            String varID = String.format("var_%s_%d", nonterminalID, varDeclHint.getSecond());
+
+            SygusExpression innerExpr = extractExpression(productionMap.get(nonterminalID), innerBlock);
+            intermediateVars.put(varID, innerExpr);
+        }
+
+        StmtIfThen stmt = ifThenStmts.get(ifThenStmts.size() - 1);
+        stmt = (StmtIfThen) ((StmtBlock) stmt.getCons()).getStmts().get(0);
+        ExprStar star = (ExprStar) stmt.getCond();
+        Type t = star.getType();
+        return ((ExprConstInt) oracle.popValueForNode(star.getDepObject(0), t)).getVal();
     }
 
     private SygusExpression constructExpressionFromChoice(

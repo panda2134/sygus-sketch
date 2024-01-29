@@ -75,8 +75,8 @@ public class SketchBuilder implements SygusNodeVisitor {
         String functionName = "constraints";
         Function.FunctionCreator fc = Function.creator((FEContext) null, functionName, Function.FcnType.Harness);
 
-        List<Statement> varDecls = problem.getVariables().stream()
-                .map(this::variableDeclWithHole)
+        List<Parameter> params = problem.getVariables().stream()
+                .map(this::variableToParam)
                 .collect(Collectors.toList());
 
         List<Statement> assertions = problem.getConstraints().stream()
@@ -84,10 +84,10 @@ public class SketchBuilder implements SygusNodeVisitor {
                 .map(expr -> new StmtAssert(prog, expr, null, 0))
                 .collect(Collectors.toList());
 
-        varDecls.addAll(assertions);
-        Statement body = new StmtBlock(varDecls);
+//        varDecls.addAll(assertions);
+        Statement body = new StmtBlock(assertions);
 
-        fc.params(new ArrayList<Parameter>());
+        fc.params(params);
         fc.body(body);
 
         return fc.create();
@@ -305,6 +305,7 @@ public class SketchBuilder implements SygusNodeVisitor {
         List<Statement> bodyStmts = new ArrayList<>();
 
         bodyStmts.addAll(rhs);
+        bodyStmts.add(new StmtAssert((FENode) null, new ExprConstInt(0), 0));
         Statement body = new StmtBlock((FENode) null, bodyStmts);
 
         fc.params(generatorParams);
