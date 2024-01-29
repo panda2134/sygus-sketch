@@ -12,11 +12,14 @@ public class TypePrimitive extends SygusType {
 
     private PredefinedType ty;
 
+    public final static TypePrimitive intType = new TypePrimitive("Int");
+    public final static TypePrimitive boolType = new TypePrimitive("Bool");
+
     public TypePrimitive(String id) {
         super(id);
-        if (id.equals("int")) {
+        if (id.equals("Int")) {
             ty = PredefinedType.TYPE_INT;
-        } else if (id.equals("boolean")) {
+        } else if (id.equals("Bool")) {
             ty = PredefinedType.TYPE_BOOLEAN;
         } else {
             throw new ParseException("Unknown primitive type");

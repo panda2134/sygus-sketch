@@ -16,7 +16,7 @@ public abstract class SygusType extends SygusNode {
     }
 
     public static boolean isPrimitiveId(String id) {
-        return (id.equals("int") || id.equals("boolean"));
+        return (id.equals("Int") || id.equals("Bool"));
     }
 
     public boolean isStruct() {

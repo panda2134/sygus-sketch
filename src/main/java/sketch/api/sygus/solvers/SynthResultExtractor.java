@@ -138,13 +138,6 @@ public class SynthResultExtractor extends SymbolTableVisitor {
             Map<String, SygusExpression> intermediateVars,
             List<Pair<String, Integer>> varDeclList
     ) {
-//        int idx = 0;
-//        for(Statement stmt : block) {
-//            System.out.println(idx++);
-//            System.out.println(stmt.getClass());
-//            System.out.println(stmt.toString());
-//        }
-
         List<StmtBlock> blockStmts = block.stream()
                 .filter(innerStmt -> (innerStmt instanceof StmtBlock))
                 .map(innerStmt -> (StmtBlock) innerStmt)
@@ -173,13 +166,6 @@ public class SynthResultExtractor extends SymbolTableVisitor {
             Map<String, SygusExpression> intermediateVars,
             List<Pair<String, Integer>> varDeclList
     ) {
-//        int idx = 0;
-//        for(Statement stmt : block) {
-//            System.out.println(idx++);
-//            System.out.println(stmt.getClass());
-//            System.out.println(stmt.toString());
-//        }
-
         List<StmtIfThen> ifThenStmts = block.stream()
                 .filter(innerStmt -> (innerStmt instanceof StmtIfThen))
                 .map(innerStmt -> (StmtIfThen) innerStmt)
