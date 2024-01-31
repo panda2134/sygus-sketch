@@ -82,42 +82,70 @@ public class SynthResultExtractor extends SymbolTableVisitor {
         stmts = ((StmtBlock) condsBlock).getStmts();
         Map<String, SygusExpression> intermediateVars = new HashMap<>();
 
-        // Find the first conditional block
+        // Find the first conditional block and
         int idx = 0;
+        int firstCond = 0;
+        int varDeclCnt = 0;
+        String currNonID = prod.getLHS().getName();
+        List<Pair<String, Integer>> varDeclList = varDeclHints.varDeclsForChoice(currNonID, 0);
         for (Statement stmt : stmts) {
             if (stmt instanceof StmtBlock) {
                 List<Statement> innerStmts = ((StmtBlock) stmt).getStmts();
-                if (innerStmts.get(innerStmts.size() - 1) instanceof StmtIfThen)
+                // Handle variable declaration which appears before choice block
+                if (innerStmts.size() == 1 && innerStmts.get(0) instanceof StmtBlock) {
+                    StmtBlock innerBlock = (StmtBlock) innerStmts.get(0);
+                    Pair<String, Integer> varDeclHint = varDeclList.get(varDeclCnt++);
+                    String nonterminalID = varDeclHint.getFirst();
+                    String varID = String.format("var_%s_%d", nonterminalID, varDeclHint.getSecond());
+
+                    SygusExpression innerExpr = extractExpression(productionMap.get(nonterminalID), innerBlock);
+                    intermediateVars.put(varID, innerExpr);
+                }
+                // First choice block found
+                else if (innerStmts.get(innerStmts.size() - 1) instanceof StmtIfThen) {
+                    firstCond = idx;
                     break;
+                }
             }
             idx += 1;
         }
 
-        int firstCond;
-        // If grammar only has one rule
-        if (idx == stmts.size()) {
-            // The second last statement (the last one is assert false)
-            firstCond = idx - 2;
-        } else {
-            firstCond = idx - 1;
-        }
+        if (idx == stmts.size())
+            throw new OutputParseException("Failed to find first conditional");
+
         List<Statement> firstConditionalBlock = ((StmtBlock) stmts.get(firstCond)).getStmts();
-        List<Pair<String, Integer>> varDeclList = varDeclHints
-                .varDeclsForChoice(prod.getLHS().getName(), 0);
-        int value = extractHoleValueFromFirstBlock(firstConditionalBlock, intermediateVars, varDeclList);
+        int value = extractHoleValueFromBlock(firstConditionalBlock, intermediateVars, varDeclList);
         if (value != 0)
             return constructExpressionFromChoice(prod, intermediateVars, 0);
 
         // If the first conditional was not chosen, look at other conditional blocks
+        int choiceCnt = 1;
+        varDeclCnt = 0;
+        varDeclList = varDeclHints.varDeclsForChoice(currNonID, choiceCnt);
         for (idx = firstCond + 1; idx < stmts.size() - 1; idx++) {
-            List<Statement> block = ((StmtBlock) stmts.get(idx)).getStmts();
-            varDeclList = varDeclHints
-                    .varDeclsForChoice(prod.getLHS().getName(), idx - firstCond);
+            Statement stmt = stmts.get(idx);
+            if (stmt instanceof StmtIfThen) {
+                List<Statement> block = ((StmtBlock) ((StmtIfThen) stmt).getCons()).getStmts();
+                // Handle variable declaration which appears before choice block
+                if (block.size() == 1 && block.get(0) instanceof StmtBlock) {
+                    StmtBlock innerBlock = (StmtBlock) block.get(0);
+                    Pair<String, Integer> varDeclHint = varDeclList.get(varDeclCnt++);
+                    String nonterminalID = varDeclHint.getFirst();
+                    String varID = String.format("var_%s_%d", nonterminalID, varDeclHint.getSecond());
 
-            // Handle variable declaration which appears before choice block
-            value = extractHoleValueFromBlock(block, intermediateVars, varDeclList);
-            if (value != 0)
-                return constructExpressionFromChoice(prod, intermediateVars, idx - firstCond);
+                    SygusExpression innerExpr = extractExpression(productionMap.get(nonterminalID), innerBlock);
+                    intermediateVars.put(varID, innerExpr);
+                }
+                // Choice block found
+                else {
+                    value = extractHoleValueFromBlock(block, intermediateVars, varDeclList);
+                    if (value != 0)
+                        return constructExpressionFromChoice(prod, intermediateVars, choiceCnt);
+                    choiceCnt++;
+                    varDeclCnt = 0;
+                    varDeclList = varDeclHints.varDeclsForChoice(currNonID, choiceCnt);
+                }
+            }
         }
 
         throw new OutputParseException("Failed to parse generator choice");
@@ -133,34 +161,8 @@ public class SynthResultExtractor extends SymbolTableVisitor {
         }
     }
 
-    private int extractHoleValueFromFirstBlock(
-            List<Statement> block,
-            Map<String, SygusExpression> intermediateVars,
-            List<Pair<String, Integer>> varDeclList
-    ) {
-        List<StmtBlock> blockStmts = block.stream()
-                .filter(innerStmt -> (innerStmt instanceof StmtBlock))
-                .map(innerStmt -> (StmtBlock) innerStmt)
-                .collect(Collectors.toList());
 
-        // Handle variable declaration which appears before choice block
-        int cnt = 0;
-        for (StmtBlock stmtInner : blockStmts.subList(0, blockStmts.size() - 1)) {
-            StmtBlock innerBlock = (StmtBlock) stmtInner.getStmts().get(0);
-            Pair<String, Integer> varDeclHint = varDeclList.get(cnt++);
-            String nonterminalID = varDeclHint.getFirst();
-            String varID = String.format("var_%s_%d", nonterminalID, varDeclHint.getSecond());
 
-            SygusExpression innerExpr = extractExpression(productionMap.get(nonterminalID), innerBlock);
-            intermediateVars.put(varID, innerExpr);
-        }
-
-        StmtBlock lastBlock = blockStmts.get(blockStmts.size() - 1);
-        StmtIfThen stmt = (StmtIfThen) lastBlock.getStmts().get(0);
-        ExprStar star = (ExprStar) stmt.getCond();
-        Type t = star.getType();
-        return ((ExprConstInt) oracle.popValueForNode(star.getDepObject(0), t)).getVal();
-    }
     private int extractHoleValueFromBlock(
             List<Statement> block,
             Map<String, SygusExpression> intermediateVars,
@@ -171,24 +173,39 @@ public class SynthResultExtractor extends SymbolTableVisitor {
                 .map(innerStmt -> (StmtIfThen) innerStmt)
                 .collect(Collectors.toList());
 
-        // Handle variable declaration which appears before choice block
-        int cnt = 0;
-        for (StmtIfThen stmtInner : ifThenStmts.subList(0, ifThenStmts.size() - 1)) {
-            StmtBlock innerBlock = (StmtBlock) ((StmtBlock) stmtInner.getCons()).getStmts().get(0);
-            Pair<String, Integer> varDeclHint = varDeclList.get(cnt++);
-            String nonterminalID = varDeclHint.getFirst();
-            String varID = String.format("var_%s_%d", nonterminalID, varDeclHint.getSecond());
-
-            SygusExpression innerExpr = extractExpression(productionMap.get(nonterminalID), innerBlock);
-            intermediateVars.put(varID, innerExpr);
-        }
-
         StmtIfThen stmt = ifThenStmts.get(ifThenStmts.size() - 1);
-        stmt = (StmtIfThen) ((StmtBlock) stmt.getCons()).getStmts().get(0);
         ExprStar star = (ExprStar) stmt.getCond();
         Type t = star.getType();
         return ((ExprConstInt) oracle.popValueForNode(star.getDepObject(0), t)).getVal();
     }
+
+//    private int extractHoleValueFromBlock(
+//            List<Statement> block,
+//            Map<String, SygusExpression> intermediateVars,
+//            List<Pair<String, Integer>> varDeclList
+//    ) {
+//        List<StmtIfThen> ifThenStmts = block.stream()
+//                .filter(innerStmt -> (innerStmt instanceof StmtIfThen))
+//                .map(innerStmt -> (StmtIfThen) innerStmt)
+//                .collect(Collectors.toList());
+//
+//        // Handle variable declaration which appears before choice block
+//        int cnt = 0;
+//        for (StmtIfThen stmtInner : ifThenStmts.subList(0, ifThenStmts.size() - 1)) {
+//            StmtBlock innerBlock = (StmtBlock) ((StmtBlock) stmtInner.getCons()).getStmts().get(0);
+//            Pair<String, Integer> varDeclHint = varDeclList.get(cnt++);
+//            String nonterminalID = varDeclHint.getFirst();
+//            String varID = String.format("var_%s_%d", nonterminalID, varDeclHint.getSecond());
+//
+//            SygusExpression innerExpr = extractExpression(productionMap.get(nonterminalID), innerBlock);
+//            intermediateVars.put(varID, innerExpr);
+//        }
+//
+//        StmtIfThen stmt = ifThenStmts.get(ifThenStmts.size() - 1);
+//        ExprStar star = (ExprStar) stmt.getCond();
+//        Type t = star.getType();
+//        return ((ExprConstInt) oracle.popValueForNode(star.getDepObject(0), t)).getVal();
+//    }
 
     private SygusExpression constructExpressionFromChoice(
             Production prod,

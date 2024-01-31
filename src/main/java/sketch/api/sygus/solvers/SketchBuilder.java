@@ -84,7 +84,6 @@ public class SketchBuilder implements SygusNodeVisitor {
                 .map(expr -> new StmtAssert(prog, expr, null, 0))
                 .collect(Collectors.toList());
 
-//        varDecls.addAll(assertions);
         Statement body = new StmtBlock(assertions);
 
         fc.params(params);
@@ -299,12 +298,10 @@ public class SketchBuilder implements SygusNodeVisitor {
         varDecls.put(currNonterminal, varDeclCurrentProd);
 
         Function.FunctionCreator fc = Function.creator((FEContext) null, generatorID, Function.FcnType.Generator);
-        List<Statement> rhs = prod.getRHSList().stream()
-                .map(this::doRHSTerm)
+        List<Statement> bodyStmts = prod.getRHSList().stream()
+                .flatMap(t -> doRHSTerm(t).stream())
                 .collect(Collectors.toList());
-        List<Statement> bodyStmts = new ArrayList<>();
 
-        bodyStmts.addAll(rhs);
         bodyStmts.add(new StmtAssert((FENode) null, new ExprConstInt(0), 0));
         Statement body = new StmtBlock((FENode) null, bodyStmts);
 
@@ -315,7 +312,7 @@ public class SketchBuilder implements SygusNodeVisitor {
         return fc.create();
     }
 
-    public Statement doRHSTerm(RHSTerm t) {
+    public List<Statement> doRHSTerm(RHSTerm t) {
         generatorCxt = new HashMap<>();
         Expression e = (Expression) t.accept(this);
 
@@ -332,6 +329,9 @@ public class SketchBuilder implements SygusNodeVisitor {
             int numPrevNonterminals = maxCxt.getOrDefault(key, 0);
             if (numPrevNonterminals >= value)
                 continue;
+
+            // This value is new maximum
+            maxCxt.put(key, value);
 
             for (int i = numPrevNonterminals; i < value; i++) {
                 String varID = String.format("var_%s_%d", key, i);
@@ -358,11 +358,11 @@ public class SketchBuilder implements SygusNodeVisitor {
         StmtReturn stmtReturn = new StmtReturn((FENode) null, e);
         StmtIfThen stmtIfThen = new StmtIfThen((FENode) null, new ExprStar(prog), stmtReturn, null);
 
-        StmtBlock stmt;
+        List<Statement> stmt;
         if (!names.isEmpty()) {
-            stmt = new StmtBlock((FENode) null, Arrays.asList(stmtVarDecl, stmtIfThen));
+            stmt = Arrays.asList(stmtVarDecl, stmtIfThen);
         } else {
-            stmt = new StmtBlock((FENode) null, Arrays.asList(stmtIfThen));
+            stmt = Collections.singletonList(stmtIfThen);
         }
 
         return stmt;

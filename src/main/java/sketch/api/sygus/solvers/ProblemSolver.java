@@ -9,6 +9,7 @@ import sketch.compiler.ast.core.Program;
 import sketch.compiler.main.PlatformLocalization;
 import sketch.compiler.main.seq.SequentialSketchMain;
 import sketch.compiler.stencilSK.EliminateStarStatic;
+import sketch.util.exceptions.SketchNotResolvedException;
 
 import java.util.Map;
 
@@ -25,6 +26,8 @@ public class ProblemSolver extends SequentialSketchMain {
     public void setInlineAmnt(int bnd) {
         super.options.bndOpts.inlineAmnt = bnd;
     }
+    public void setControlBits(int numBits) { super.options.bndOpts.cbits = numBits; }
+    public void setQuantifiedBits(int numBits) { super.options.bndOpts.inbits = numBits; }
 
     private Program buildSketchProgram() {
         SketchBuilder builder = new SketchBuilder();
@@ -39,6 +42,7 @@ public class ProblemSolver extends SequentialSketchMain {
 
         try {
             prog = buildSketchProgram();
+            // prog.debugDump();
         } catch (SolverException se) {
             se.printStackTrace();
             throw se;
@@ -49,8 +53,14 @@ public class ProblemSolver extends SequentialSketchMain {
         }
 
         prog = this.preprocAndSemanticCheck(prog);
-        SynthesisResult synthResult = this.partialEvalAndSolve(prog);
-        Output output = getOutput(synthResult);
+
+        Output output;
+        try {
+            SynthesisResult synthResult = this.partialEvalAndSolve(prog);
+            output = getOutput(synthResult);
+        } catch (SketchNotResolvedException e) {
+            output = new Output(Output.Result.UNREALIZABLE, null);
+        }
 
         this.log(1, "[SyGuS-Sketch] DONE");
         return output;
